@@ -25,3 +25,25 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## Artifacts
+
+### نشمي سوق Gaming Store (`artifacts/nashmi-store`)
+- **Type**: React + Vite frontend-only app (no backend)
+- **Path**: `/` (root)
+- **Stack**: React, TypeScript, Tailwind CSS, Wouter, Framer Motion, react-icons
+- **Features**:
+  - Full Arabic RTL e-commerce gaming store
+  - Dark theme (black + red neon glow aesthetic)
+  - Pages: Home, Products (grid + filter), Product Detail, Categories, Contact, Login, Register
+  - Shopping cart with React Context (add/remove/quantity)
+  - Cart slide-out drawer (shadcn Sheet)
+  - 14 sample gaming products across 4 categories
+  - Responsive (mobile + desktop)
+  - Google Fonts: Orbitron (futuristic headings) + Cairo (Arabic)
+- **Key files**:
+  - `src/data/products.ts` — all mock product data
+  - `src/context/CartContext.tsx` — cart state management
+  - `src/components/Navbar.tsx` — top navigation with cart icon
+  - `src/components/Footer.tsx` — footer with social icons
+  - `src/pages/` — all page components
