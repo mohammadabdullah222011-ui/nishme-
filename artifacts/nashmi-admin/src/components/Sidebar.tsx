@@ -14,6 +14,7 @@ import {
   Server,
   FileText,
 } from "lucide-react";
+const logoImg = `${import.meta.env.BASE_URL}logo-nashmi.png`;
 
 const navItems = [
   { href: "/", icon: LayoutDashboard, label: "لوحة التحكم" },
@@ -47,22 +48,26 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       style={{ background: "rgba(9,9,9,0.97)", backdropFilter: "blur(20px)" }}
     >
       {/* Logo */}
-      <div className={`flex items-center gap-3 px-4 py-5 border-b border-white/[0.06] ${collapsed ? "justify-center" : ""}`}>
-        <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-          style={{
-            background: "linear-gradient(135deg, #dc2626, #7f1d1d)",
-            boxShadow: "0 0 15px rgba(220,38,38,0.4)",
-          }}
-        >
-          <Gamepad2 size={18} className="text-white" />
-        </div>
-        {!collapsed && (
-          <div>
-            <p className="text-white font-bold text-sm leading-none" style={{ fontFamily: "'Orbitron', monospace" }}>
-              نشمي
-            </p>
-            <p className="text-white/40 text-xs mt-0.5">Admin Panel</p>
+      <div className={`flex items-center gap-3 px-3 py-4 border-b border-white/[0.06] ${collapsed ? "justify-center" : ""}`}>
+        {collapsed ? (
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{
+              background: "linear-gradient(135deg, #dc2626, #7f1d1d)",
+              boxShadow: "0 0 15px rgba(220,38,38,0.4)",
+            }}
+          >
+            <Gamepad2 size={18} className="text-white" />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center w-full gap-0.5">
+            <img
+              src={logoImg}
+              alt="Nashmi Souq"
+              className="h-12 w-auto object-contain"
+              style={{ filter: "drop-shadow(0 0 8px rgba(220,38,38,0.5))" }}
+            />
+            <p className="text-white/30 text-[9px] tracking-widest uppercase">Admin Panel</p>
           </div>
         )}
       </div>
