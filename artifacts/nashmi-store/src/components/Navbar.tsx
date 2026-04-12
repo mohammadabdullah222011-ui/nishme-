@@ -1,8 +1,12 @@
 import { useState } from "react";
-import { Link, useLocation } from "wouter";
-import { ShoppingCart, Menu, X, Gamepad2, User } from "lucide-react";
+import { Link, useLocation, useRouter } from "wouter";
+import { ShoppingCart, Menu, X, User, LogOut, Settings, LayoutDashboard, Shield } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useUser } from "@/context/UserContext";
 import CartDrawer from "@/components/CartDrawer";
+import EditProfileModal from "@/components/EditProfileModal";
+
+const logoImg = `${import.meta.env.BASE_URL}logo-nashmi.png`;
 
 const navLinks = [
   { href: "/", label: "الرئيسية" },
@@ -13,9 +17,20 @@ const navLinks = [
 
 export default function Navbar() {
   const [location] = useLocation();
+  const { navigate } = useRouter();
   const { totalItems } = useCart();
+  const { user, logout, isAdmin } = useUser();
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+
+  const handleLogout = () => {
+    logout();
+    setProfileOpen(false);
+    navigate("/");
+  };
 
   return (
     <>
@@ -58,29 +73,116 @@ export default function Navbar() {
             </div>
 
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group" data-testid="link-logo">
-              <div
-                className="w-9 h-9 rounded-lg flex items-center justify-center transition-all duration-300 group-hover:glow-red"
-                style={{ background: "linear-gradient(135deg, #dc2626, #7f1d1d)" }}
-              >
-                <Gamepad2 size={20} className="text-white" />
-              </div>
-              <span
-                className="text-xl font-black tracking-wider text-white group-hover:text-red-400 transition-colors"
-                style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 900 }}
-              >
-                نشمي سوق
-              </span>
+            <Link href="/" className="flex items-center" data-testid="link-logo">
+              <img
+                src={logoImg}
+                alt="نشمي سوق"
+                className="h-10 w-auto object-contain"
+                style={{ filter: "drop-shadow(0 0 8px rgba(220,38,38,0.5))" }}
+              />
             </Link>
 
             {/* Right Actions */}
             <div className="flex items-center gap-3">
-              <Link href="/login" data-testid="link-login">
-                <button className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg border border-red-600/40 text-red-400 hover:bg-red-600/10 hover:border-red-500 transition-all duration-200 text-sm font-semibold">
-                  <User size={16} />
-                  <span>دخول</span>
-                </button>
-              </Link>
+              {user ? (
+                /* Logged-in user avatar + dropdown */
+                <div className="relative hidden sm:block">
+                  <button
+                    onClick={() => setProfileOpen(!profileOpen)}
+                    className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-white/10 hover:border-red-500/40 hover:bg-red-600/5 transition-all duration-200"
+                    data-testid="button-user-menu"
+                  >
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold relative"
+                      style={{ background: "linear-gradient(135deg, #dc2626, #7f1d1d)", boxShadow: "0 0 10px rgba(220,38,38,0.4)" }}
+                    >
+                      {user.avatar}
+                      {isAdmin && (
+                        <span
+                          className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full flex items-center justify-center"
+                          style={{ background: "#dc2626", border: "1.5px solid #0a0a0a" }}
+                        >
+                          <Shield size={6} className="text-white" />
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-white/80 text-sm font-medium max-w-[100px] truncate">{user.name}</span>
+                    <X
+                      size={12}
+                      className={`text-white/30 transition-transform duration-200 ${profileOpen ? "rotate-0" : "rotate-45"}`}
+                    />
+                  </button>
+
+                  {profileOpen && (
+                    <div
+                      className="absolute left-0 top-12 w-56 rounded-2xl border border-white/10 shadow-2xl overflow-hidden z-50"
+                      style={{ background: "rgba(10,10,10,0.98)", backdropFilter: "blur(20px)" }}
+                    >
+                      {/* User info header */}
+                      <div
+                        className="px-4 py-3.5 border-b border-white/8"
+                        style={{ background: "linear-gradient(135deg, rgba(220,38,38,0.08), transparent)" }}
+                      >
+                        <p className="text-white font-semibold text-sm truncate">{user.name}</p>
+                        <p className="text-white/40 text-xs truncate mt-0.5">{user.email}</p>
+                        <span
+                          className={`inline-flex items-center gap-1 mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            isAdmin ? "text-red-400 bg-red-500/10 border border-red-500/20" : "text-blue-300 bg-blue-500/10 border border-blue-500/20"
+                          }`}
+                        >
+                          {isAdmin ? <><Shield size={8} /> مدير النظام</> : <><User size={8} /> مستخدم</>}
+                        </span>
+                      </div>
+
+                      {/* Menu items */}
+                      <div className="py-1.5">
+                        <button
+                          onClick={() => { setEditOpen(true); setProfileOpen(false); }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors text-right"
+                          data-testid="button-edit-profile"
+                        >
+                          <Settings size={15} className="text-white/40" />
+                          تعديل الملف الشخصي
+                        </button>
+
+                        {/* Admin Panel link — admins only */}
+                        {isAdmin && (
+                          <a
+                            href="/admin/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors border-t border-white/5 mt-1"
+                            onClick={() => setProfileOpen(false)}
+                            data-testid="link-admin-panel"
+                          >
+                            <LayoutDashboard size={15} />
+                            لوحة الإدارة
+                          </a>
+                        )}
+
+                        <div className="border-t border-white/8 mt-1 pt-1">
+                          <button
+                            onClick={handleLogout}
+                            className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-white/50 hover:text-red-400 hover:bg-red-500/5 transition-colors"
+                            data-testid="button-logout"
+                          >
+                            <LogOut size={15} />
+                            تسجيل الخروج
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link href="/login" data-testid="link-login">
+                  <button className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg border border-red-600/40 text-red-400 hover:bg-red-600/10 hover:border-red-500 transition-all duration-200 text-sm font-semibold">
+                    <User size={16} />
+                    <span>دخول</span>
+                  </button>
+                </Link>
+              )}
+
               <button
                 onClick={() => setCartOpen(true)}
                 className="relative p-2.5 rounded-lg border border-white/10 text-white/80 hover:text-white hover:border-red-500/50 hover:bg-red-600/10 transition-all duration-200"
@@ -123,20 +225,58 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              <Link
-                href="/login"
-                onClick={() => setMobileOpen(false)}
-                className="mt-2 px-4 py-3 rounded-lg border border-red-600/40 text-red-400 text-sm font-semibold text-center hover:bg-red-600/10 transition-all"
-                data-testid="link-mobile-login"
-              >
-                تسجيل الدخول
-              </Link>
+
+              {user ? (
+                <>
+                  <button
+                    onClick={() => { setEditOpen(true); setMobileOpen(false); }}
+                    className="mt-2 px-4 py-3 rounded-lg border border-white/10 text-white/70 text-sm font-semibold text-right flex items-center gap-2 hover:bg-white/5 transition-all"
+                  >
+                    <Settings size={15} />
+                    تعديل الملف الشخصي
+                  </button>
+                  {isAdmin && (
+                    <a
+                      href="/admin/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-3 rounded-lg border border-red-600/30 text-red-400 text-sm font-semibold flex items-center gap-2 hover:bg-red-600/10 transition-all"
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      <LayoutDashboard size={15} />
+                      لوحة الإدارة
+                    </a>
+                  )}
+                  <button
+                    onClick={() => { handleLogout(); setMobileOpen(false); }}
+                    className="px-4 py-3 rounded-lg text-white/50 text-sm font-semibold text-right flex items-center gap-2 hover:text-red-400 hover:bg-red-500/5 transition-all"
+                  >
+                    <LogOut size={15} />
+                    تسجيل الخروج
+                  </button>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="mt-2 px-4 py-3 rounded-lg border border-red-600/40 text-red-400 text-sm font-semibold text-center hover:bg-red-600/10 transition-all"
+                  data-testid="link-mobile-login"
+                >
+                  تسجيل الدخول
+                </Link>
+              )}
             </div>
           </div>
         )}
       </nav>
 
       <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
+      <EditProfileModal open={editOpen} onClose={() => setEditOpen(false)} />
+
+      {/* Close dropdown on outside click */}
+      {profileOpen && (
+        <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)} />
+      )}
     </>
   );
 }

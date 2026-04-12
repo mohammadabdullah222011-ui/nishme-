@@ -1,6 +1,9 @@
 import { useState } from "react";
-import { Link } from "wouter";
-import { Gamepad2, Eye, EyeOff, Mail, Lock, User, CheckCircle } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Eye, EyeOff, Mail, Lock, User, CheckCircle } from "lucide-react";
+import { useUser } from "@/context/UserContext";
+
+const logoImg = `${import.meta.env.BASE_URL}logo-nashmi.png`;
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
@@ -8,6 +11,8 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [, navigate] = useLocation();
+  const { login } = useUser();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,8 +23,10 @@ export default function RegisterPage() {
     setError("");
     setLoading(true);
     setTimeout(() => {
+      login(form.email, form.name);
       setLoading(false);
       setSuccess(true);
+      setTimeout(() => navigate("/"), 1500);
     }, 1500);
   };
 
@@ -38,22 +45,13 @@ export default function RegisterPage() {
         >
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-              style={{
-                background: "linear-gradient(135deg, #dc2626, #7f1d1d)",
-                boxShadow: "0 0 20px rgba(220,38,38,0.4)",
-              }}
-            >
-              <Gamepad2 size={28} className="text-white" />
-            </div>
-            <h1
-              className="text-3xl font-black text-white"
-              style={{ fontFamily: "'Cairo', sans-serif", fontWeight: 900 }}
-            >
-              نشمي سوق
-            </h1>
-            <p className="text-white/40 text-sm mt-1">إنشاء حساب جديد</p>
+            <img
+              src={logoImg}
+              alt="نشمي سوق"
+              className="h-16 w-auto object-contain mb-3"
+              style={{ filter: "drop-shadow(0 0 12px rgba(220,38,38,0.5))" }}
+            />
+            <p className="text-white/40 text-sm">إنشاء حساب جديد</p>
           </div>
 
           {success ? (
