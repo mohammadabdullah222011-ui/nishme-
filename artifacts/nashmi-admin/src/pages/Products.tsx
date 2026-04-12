@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { Search, Plus, Filter } from "lucide-react";
+import AddProductModal from "@/components/AddProductModal";
 
-const products = [
+const initialProducts = [
   { id: 1, name: "PlayStation 5 Digital Edition", category: "كونسول", price: 2299, stock: 3, status: "منخفض" },
   { id: 2, name: "Xbox Series X 1TB", category: "كونسول", price: 2099, stock: 18, status: "متوفر" },
   { id: 3, name: "ROG Strix G15 Laptop", category: "كمبيوتر", price: 4899, stock: 7, status: "متوفر" },
@@ -18,12 +20,27 @@ const stockStyles: Record<string, string> = {
 };
 
 export default function Products() {
+  const [products, setProducts] = useState(initialProducts);
+  const [showModal, setShowModal] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filtered = products.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.category.includes(search)
+  );
+
+  const handleAdd = (product: any) => {
+    setProducts([{ ...product, id: products.length + 1 }, ...products]);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-white text-2xl font-bold">المنتجات</h1>
         <button
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
+          onClick={() => setShowModal(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-200"
           style={{ background: "rgba(220,38,38,0.85)", boxShadow: "0 0 15px rgba(220,38,38,0.3)" }}
           data-testid="button-add-product"
         >
@@ -40,6 +57,8 @@ export default function Products() {
               type="search"
               placeholder="البحث في المنتجات..."
               className="w-full bg-white/5 border border-white/8 rounded-xl py-2 pl-8 pr-4 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/40 transition-colors"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <button className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/8 text-white/50 hover:text-white text-sm transition-all">
@@ -58,12 +77,12 @@ export default function Products() {
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
+              {filtered.map((p) => (
                 <tr key={p.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
                   <td className="py-3 px-2">
                     <div className="flex items-center gap-3">
                       <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                         style={{ background: "linear-gradient(135deg, rgba(220,38,38,0.3), rgba(220,38,38,0.1))" }}
                       >
                         {p.id}
@@ -92,10 +111,17 @@ export default function Products() {
                   </td>
                 </tr>
               ))}
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-white/30 text-sm">لا توجد نتائج</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
+      <AddProductModal open={showModal} onClose={() => setShowModal(false)} onAdd={handleAdd} />
     </div>
   );
 }

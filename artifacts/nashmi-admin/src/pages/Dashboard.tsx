@@ -1,4 +1,5 @@
-import { ShoppingCart, Users, DollarSign, Package, TrendingUp, Star } from "lucide-react";
+import { useState } from "react";
+import { ShoppingCart, Users, DollarSign, Package, TrendingUp, Star, Plus } from "lucide-react";
 import StatCard from "@/components/StatCard";
 import RevenueChart from "@/components/RevenueChart";
 import TrafficChart from "@/components/TrafficChart";
@@ -8,6 +9,9 @@ import AlertsPanel from "@/components/AlertsPanel";
 import CategoryChart from "@/components/CategoryChart";
 import DevicesPanel from "@/components/DevicesPanel";
 import QuickActions from "@/components/QuickActions";
+import AddOrderModal from "@/components/AddOrderModal";
+import AddProductModal from "@/components/AddProductModal";
+import AddSaleModal from "@/components/AddSaleModal";
 
 const stats = [
   {
@@ -59,14 +63,49 @@ const stats = [
 ];
 
 export default function Dashboard() {
+  const [orderModal, setOrderModal] = useState(false);
+  const [productModal, setProductModal] = useState(false);
+  const [saleModal, setSaleModal] = useState(false);
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-white text-2xl font-bold">لوحة التحكم</h1>
-        <p className="text-white/40 text-sm mt-1">
-          مرحباً بك في لوحة إدارة نشمي سوق — آخر تحديث: الآن
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-white text-2xl font-bold">لوحة التحكم</h1>
+          <p className="text-white/40 text-sm mt-1">
+            مرحباً بك في لوحة إدارة نشمي سوق — آخر تحديث: الآن
+          </p>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex gap-2 flex-wrap justify-end">
+          <button
+            onClick={() => setOrderModal(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-white transition-all duration-200 hover:opacity-90"
+            style={{ background: "rgba(220,38,38,0.85)", boxShadow: "0 0 12px rgba(220,38,38,0.3)" }}
+            data-testid="button-dashboard-add-order"
+          >
+            <Plus size={13} />
+            طلب جديد
+          </button>
+          <button
+            onClick={() => setProductModal(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border border-white/10 text-white/70 hover:text-white hover:border-red-500/30 hover:bg-red-500/5 transition-all duration-200"
+            data-testid="button-dashboard-add-product"
+          >
+            <Plus size={13} />
+            منتج جديد
+          </button>
+          <button
+            onClick={() => setSaleModal(true)}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border border-white/10 text-white/70 hover:text-white hover:border-red-500/30 hover:bg-red-500/5 transition-all duration-200"
+            data-testid="button-dashboard-add-sale"
+          >
+            <Plus size={13} />
+            تسجيل مبيعة
+          </button>
+        </div>
       </div>
 
       {/* Stats grid */}
@@ -99,6 +138,11 @@ export default function Dashboard() {
         <DevicesPanel />
         <QuickActions />
       </div>
+
+      {/* Modals */}
+      <AddOrderModal open={orderModal} onClose={() => setOrderModal(false)} onAdd={() => {}} />
+      <AddProductModal open={productModal} onClose={() => setProductModal(false)} onAdd={() => {}} />
+      <AddSaleModal open={saleModal} onClose={() => setSaleModal(false)} onAdd={() => {}} />
     </div>
   );
 }
