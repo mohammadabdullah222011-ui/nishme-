@@ -61,7 +61,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                       {product.name}
                     </p>
                     <p className="text-red-400 font-bold mt-1">
-                      {product.price.toLocaleString("ar-SA")} ريال
+                      {product.price.toLocaleString("en")} د.أ
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <button
@@ -101,7 +101,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             <div className="flex justify-between items-center">
               <span className="text-white/60">المجموع</span>
               <span className="text-white font-bold text-lg">
-                {totalPrice.toLocaleString("ar-SA")} ريال
+                {totalPrice.toLocaleString("en")} د.أ
               </span>
             </div>
             <button

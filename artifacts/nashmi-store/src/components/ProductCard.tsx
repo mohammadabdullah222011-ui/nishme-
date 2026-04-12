@@ -90,9 +90,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                 style={{ color: "#ef4444", fontFamily: "'Cairo', sans-serif" }}
                 data-testid={`text-price-${product.id}`}
               >
-                {product.price.toLocaleString("ar-SA")}
+                {product.price.toLocaleString("en")}
               </p>
-              <p className="text-white/40 text-xs">ريال سعودي</p>
+              <p className="text-white/40 text-xs">دينار اردني</p>
             </div>
             <button
               onClick={handleAddToCart}

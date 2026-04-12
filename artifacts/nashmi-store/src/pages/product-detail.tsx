@@ -133,9 +133,9 @@ export default function ProductDetailPage() {
                 style={{ color: "#ef4444", fontFamily: "'Orbitron', sans-serif" }}
                 data-testid="text-product-price"
               >
-                {product.price.toLocaleString("ar-SA")}
+                {product.price.toLocaleString("en")}
               </span>
-              <span className="text-white/50 text-lg font-medium">ريال سعودي</span>
+              <span className="text-white/50 text-lg font-medium">دينار اردني</span>
             </div>
 
             {/* Description */}
