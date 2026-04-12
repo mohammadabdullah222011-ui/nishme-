@@ -13,7 +13,7 @@ const stats = [
   {
     title: "إجمالي الإيرادات",
     value: 469000,
-    unit: "ريال",
+    unit: "JOD",
     change: 18.5,
     icon: <DollarSign size={18} className="text-red-400" />,
     iconBg: "rgba(220,38,38,0.12)",

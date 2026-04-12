@@ -78,7 +78,7 @@ export default function Orders() {
                   <td className="py-3 px-2 text-white/60">{order.product}</td>
                   <td className="py-3 px-2">
                     <span className="text-white font-bold font-mono text-xs" style={{ fontFamily: "'Orbitron', monospace" }}>
-                      {order.amount.toLocaleString()} ر
+                      {order.amount.toLocaleString()} JOD
                     </span>
                   </td>
                   <td className="py-3 px-2">

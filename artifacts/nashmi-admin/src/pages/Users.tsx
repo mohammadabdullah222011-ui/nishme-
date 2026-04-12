@@ -83,7 +83,7 @@ export default function Users() {
                   <td className="py-3 px-2 text-white/40 text-xs">{user.email}</td>
                   <td className="py-3 px-2 text-white/70 text-xs">{user.orders}</td>
                   <td className="py-3 px-2 text-white font-bold text-xs" style={{ fontFamily: "'Orbitron', monospace" }}>
-                    {user.spent.toLocaleString()} ر
+                    {user.spent.toLocaleString()} JOD
                   </td>
                   <td className="py-3 px-2">
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusStyles[user.status]}`}>

@@ -77,7 +77,7 @@ export default function Products() {
                     </span>
                   </td>
                   <td className="py-3 px-2 text-white font-bold text-xs" style={{ fontFamily: "'Orbitron', monospace" }}>
-                    {p.price.toLocaleString()} ر
+                    {p.price.toLocaleString()} JOD
                   </td>
                   <td className="py-3 px-2 text-white/60 text-xs">{p.stock}</td>
                   <td className="py-3 px-2">

@@ -36,7 +36,7 @@ export const recentOrders = [
 export const notifications = [
   { id: 1, type: "alert", title: "تنبيه أمني", desc: "محاولة دخول غير مصرح به من IP: 192.168.1.1", time: "منذ 2 دقيقة", read: false },
   { id: 2, type: "warning", title: "مخزون منخفض", desc: "PS5 — تبقت 3 وحدات فقط في المخزون", time: "منذ 15 دقيقة", read: false },
-  { id: 3, type: "info", title: "طلب جديد", desc: "طلب #ORD-8841 تم استلامه بمبلغ 2299 ريال", time: "منذ 5 دقائق", read: false },
+  { id: 3, type: "info", title: "طلب جديد", desc: "طلب #ORD-8841 تم استلامه بمبلغ 2299 JOD", time: "منذ 5 دقائق", read: false },
   { id: 4, type: "success", title: "نسخة احتياطية", desc: "تم إنجاز النسخة الاحتياطية اليومية بنجاح", time: "منذ ساعة", read: true },
   { id: 5, type: "warning", title: "أداء النظام", desc: "معدل استخدام CPU وصل 85% — يُوصى بالمراجعة", time: "منذ 30 دقيقة", read: true },
 ];

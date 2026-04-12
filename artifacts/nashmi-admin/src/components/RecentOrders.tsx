@@ -48,7 +48,7 @@ export default function RecentOrders() {
               >
                 {order.amount.toLocaleString()}
               </p>
-              <p className="text-white/30 text-[10px]">ريال</p>
+              <p className="text-white/30 text-[10px]">JOD</p>
             </div>
 
             {/* Status */}
