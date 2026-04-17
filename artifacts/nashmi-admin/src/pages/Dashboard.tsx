@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ShoppingCart, Users, DollarSign, Package, TrendingUp, Star, Plus } from "lucide-react";
 import StatCard from "@/components/StatCard";
 import RevenueChart from "@/components/RevenueChart";
@@ -12,60 +12,75 @@ import QuickActions from "@/components/QuickActions";
 import AddOrderModal from "@/components/AddOrderModal";
 import AddProductModal from "@/components/AddProductModal";
 import AddSaleModal from "@/components/AddSaleModal";
-
-const stats = [
-  {
-    title: "إجمالي الإيرادات",
-    value: 469000,
-    unit: "JOD",
-    change: 18.5,
-    icon: <DollarSign size={18} className="text-red-400" />,
-    iconBg: "rgba(220,38,38,0.12)",
-    glowRed: true,
-  },
-  {
-    title: "إجمالي الطلبات",
-    value: 3155,
-    change: 12.3,
-    icon: <ShoppingCart size={18} className="text-blue-400" />,
-    iconBg: "rgba(59,130,246,0.12)",
-  },
-  {
-    title: "المستخدمون النشطون",
-    value: 15480,
-    change: 8.7,
-    icon: <Users size={18} className="text-green-400" />,
-    iconBg: "rgba(16,185,129,0.12)",
-  },
-  {
-    title: "المنتجات المتاحة",
-    value: 284,
-    change: -2.1,
-    icon: <Package size={18} className="text-orange-400" />,
-    iconBg: "rgba(249,115,22,0.12)",
-  },
-  {
-    title: "معدل التحويل",
-    value: "7.4",
-    unit: "%",
-    change: 3.2,
-    icon: <TrendingUp size={18} className="text-purple-400" />,
-    iconBg: "rgba(139,92,246,0.12)",
-  },
-  {
-    title: "تقييم المتجر",
-    value: "4.8",
-    unit: "/ 5",
-    change: 0.3,
-    icon: <Star size={18} className="text-yellow-400" />,
-    iconBg: "rgba(234,179,8,0.12)",
-  },
-];
+import { adminApi } from "@/lib/api";
 
 export default function Dashboard() {
   const [orderModal, setOrderModal] = useState(false);
   const [productModal, setProductModal] = useState(false);
   const [saleModal, setSaleModal] = useState(false);
+  const [liveStats, setLiveStats] = useState<{
+    totalRevenue: number; totalOrders: number; totalUsers: number; totalProducts: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchStats = () => {
+      adminApi.dashboard()
+        .then((d) => setLiveStats({ totalRevenue: d.totalRevenue, totalOrders: d.totalOrders, totalUsers: d.totalUsers, totalProducts: d.totalProducts }))
+        .catch(() => {});
+    };
+    fetchStats();
+    const interval = setInterval(fetchStats, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const stats = [
+    {
+      title: "إجمالي الإيرادات",
+      value: liveStats?.totalRevenue ?? 469000,
+      unit: "JOD",
+      change: 18.5,
+      icon: <DollarSign size={18} className="text-red-400" />,
+      iconBg: "rgba(220,38,38,0.12)",
+      glowRed: true,
+    },
+    {
+      title: "إجمالي الطلبات",
+      value: liveStats?.totalOrders ?? 3155,
+      change: 12.3,
+      icon: <ShoppingCart size={18} className="text-blue-400" />,
+      iconBg: "rgba(59,130,246,0.12)",
+    },
+    {
+      title: "المستخدمون المسجلون",
+      value: liveStats?.totalUsers ?? 0,
+      change: 8.7,
+      icon: <Users size={18} className="text-green-400" />,
+      iconBg: "rgba(16,185,129,0.12)",
+    },
+    {
+      title: "المنتجات المتاحة",
+      value: liveStats?.totalProducts ?? 0,
+      change: -2.1,
+      icon: <Package size={18} className="text-orange-400" />,
+      iconBg: "rgba(249,115,22,0.12)",
+    },
+    {
+      title: "معدل التحويل",
+      value: "7.4",
+      unit: "%",
+      change: 3.2,
+      icon: <TrendingUp size={18} className="text-purple-400" />,
+      iconBg: "rgba(139,92,246,0.12)",
+    },
+    {
+      title: "تقييم المتجر",
+      value: "4.8",
+      unit: "/ 5",
+      change: 0.3,
+      icon: <Star size={18} className="text-yellow-400" />,
+      iconBg: "rgba(234,179,8,0.12)",
+    },
+  ];
 
   return (
     <div className="space-y-6">

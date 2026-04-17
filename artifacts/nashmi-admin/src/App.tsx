@@ -10,6 +10,8 @@ import Analytics from "@/pages/Analytics";
 import Orders from "@/pages/Orders";
 import Products from "@/pages/Products";
 import Users from "@/pages/Users";
+import { AdminAuthProvider } from "@/context/AdminAuthContext";
+import AdminLoginGate from "@/components/AdminLoginGate";
 
 const queryClient = new QueryClient();
 
@@ -53,9 +55,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <AdminLayout />
-        </WouterRouter>
+        <AdminAuthProvider>
+          <AdminLoginGate>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <AdminLayout />
+            </WouterRouter>
+          </AdminLoginGate>
+        </AdminAuthProvider>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

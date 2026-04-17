@@ -1,0 +1,192 @@
+You are a senior full-stack engineer. Transform my current frontend e-commerce project (gaming store) into a fully functional production-ready system.
+
+## 🔥 GOAL
+
+Convert my static website into a full-stack app with:
+
+* Real backend (Node.js + Express)
+* PostgreSQL database
+* Authentication system (Register/Login)
+* Admin dashboard
+* Fully dynamic data (products, orders, users)
+* Real-time-like updates
+
+---
+
+## 🧱 TECH STACK (MANDATORY)
+
+* Backend: Node.js + Express
+* Database: PostgreSQL
+* ORM: Prisma or direct SQL (your choice)
+* Auth: JWT + bcrypt
+* Frontend: keep existing (React or static), just connect it
+
+---
+
+## 🗄️ DATABASE SCHEMA
+
+Create these tables:
+
+### users
+
+* id (PK)
+* name
+* email (unique)
+* password (hashed)
+* role (admin/user)
+* created_at
+
+### products
+
+* id
+* name
+* description
+* price
+* image_url
+* stock
+* created_at
+
+### orders
+
+* id
+* user_id (FK)
+* total
+* status (pending, paid, shipped)
+* created_at
+
+### order_items
+
+* id
+* order_id (FK)
+* product_id (FK)
+* quantity
+* price
+
+---
+
+## 🔐 AUTH SYSTEM
+
+Implement:
+
+* POST /api/register
+* POST /api/login
+
+Requirements:
+
+* Hash passwords with bcrypt
+* Return JWT token
+* Middleware to protect routes
+* Role-based access (admin only for product management)
+
+---
+
+## 📦 PRODUCTS API
+
+* GET /api/products
+* GET /api/products/:id
+* POST /api/products (admin only)
+* PUT /api/products/:id (admin)
+* DELETE /api/products/:id (admin)
+
+When a product is added or updated, it should immediately be reflected in the frontend.
+
+---
+
+## 🛒 ORDERS SYSTEM
+
+* POST /api/orders (user can create order with multiple products)
+* GET /api/orders (admin)
+* GET /api/orders/my (current user)
+
+Order request example:
+{
+"items": [
+{ "product_id": 1, "quantity": 2 },
+{ "product_id": 3, "quantity": 1 }
+]
+}
+
+System must:
+
+* Calculate total price
+* Store items in order_items table
+
+---
+
+## 📊 DASHBOARD API
+
+Create:
+GET /api/dashboard
+
+Return:
+
+* total users
+* total orders
+* total revenue
+* latest orders
+
+Use real SQL queries (COUNT, SUM)
+
+---
+
+## 🖼️ IMAGE HANDLING
+
+* Allow image_url input for products
+* Optional: support image upload using multer
+
+---
+
+## 🔄 FRONTEND INTEGRATION
+
+Modify frontend so that:
+
+* Products are fetched from API (not static)
+* Add to cart updates state
+* Orders are sent to backend
+* Dashboard uses real data
+* After adding product → refresh list automatically
+
+Use fetch or axios.
+
+---
+
+## ⚡ REAL-TIME FEEL
+
+Implement one:
+
+* polling every 5 seconds
+  OR
+* WebSocket (Socket.io)
+
+---
+
+## 🧪 EXTRA FEATURES
+
+* Toast notifications
+* Loading states
+* Error handling
+
+---
+
+## 🧑‍💻 PROJECT STRUCTURE
+
+/backend
+/routes
+/controllers
+/middleware
+/db
+
+---
+
+## 🚀 FINAL REQUIREMENTS
+
+* Working backend server
+* Connected PostgreSQL database
+* All endpoints functional
+* Frontend fully connected
+* No static fake data
+* Clean, readable code
+
+---
+
+Now implement everything step by step and generate all necessary code files.

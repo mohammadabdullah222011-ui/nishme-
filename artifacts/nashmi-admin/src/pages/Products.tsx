@@ -1,17 +1,25 @@
-import { useState } from "react";
-import { Search, Plus, Filter } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, Plus, Filter, Trash2, Loader2, RefreshCw } from "lucide-react";
 import AddProductModal from "@/components/AddProductModal";
+import { adminApi, type AdminProduct } from "@/lib/api";
 
-const initialProducts = [
-  { id: 1, name: "PlayStation 5 Digital Edition", category: "كونسول", price: 2299, stock: 3, status: "منخفض" },
-  { id: 2, name: "Xbox Series X 1TB", category: "كونسول", price: 2099, stock: 18, status: "متوفر" },
-  { id: 3, name: "ROG Strix G15 Laptop", category: "كمبيوتر", price: 4899, stock: 7, status: "متوفر" },
-  { id: 4, name: "Alienware m15 R7", category: "كمبيوتر", price: 5499, stock: 5, status: "متوفر" },
-  { id: 5, name: "SteelSeries Arctis Nova Pro", category: "إكسسوارات", price: 599, stock: 24, status: "متوفر" },
-  { id: 6, name: "Logitech G Pro X Superlight", category: "إكسسوارات", price: 399, stock: 31, status: "متوفر" },
-  { id: 7, name: "God of War: Ragnarok", category: "ألعاب", price: 199, stock: 52, status: "متوفر" },
-  { id: 8, name: "FIFA 25", category: "ألعاب", price: 179, stock: 0, status: "نفد" },
-];
+const categoryMap: Record<string, string> = {
+  "كمبيوتر": "pc",
+  "كونسول": "consoles",
+  "إكسسوارات": "accessories",
+  "ألعاب": "games",
+  "pc": "pc",
+  "consoles": "consoles",
+  "accessories": "accessories",
+  "games": "games",
+};
+
+const categoryLabel: Record<string, string> = {
+  pc: "كمبيوتر",
+  consoles: "كونسول",
+  accessories: "إكسسوارات",
+  games: "ألعاب",
+};
 
 const stockStyles: Record<string, string> = {
   "متوفر": "text-green-400 bg-green-400/10 border-green-400/20",
@@ -19,106 +27,173 @@ const stockStyles: Record<string, string> = {
   "نفد": "text-red-400 bg-red-400/10 border-red-400/20",
 };
 
+function stockStatus(stock: number) {
+  if (stock === 0) return "نفد";
+  if (stock <= 5) return "منخفض";
+  return "متوفر";
+}
+
 export default function Products() {
-  const [products, setProducts] = useState(initialProducts);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState("");
+  const [deleting, setDeleting] = useState<number | null>(null);
+
+  const fetchProducts = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const data = await adminApi.getProducts();
+      setProducts(data);
+      setError("");
+    } catch (e: any) {
+      if (!silent) setError(e.message);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+    const interval = setInterval(() => fetchProducts(true), 10000);
+    return () => clearInterval(interval);
+  }, [fetchProducts]);
+
+  const handleAdd = async (product: any) => {
+    try {
+      const category = categoryMap[product.category] || "pc";
+      await adminApi.addProduct({
+        name: product.name,
+        description: product.name,
+        price: product.price,
+        stock: product.stock,
+        category,
+        badge: "جديد",
+        imageUrl: product.image || "",
+      });
+      await fetchProducts(true);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    setDeleting(id);
+    try {
+      await adminApi.deleteProduct(id);
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+    } catch {
+      // ignore
+    } finally {
+      setDeleting(null);
+    }
+  };
 
   const filtered = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.category.includes(search)
+    (p) => p.name.toLowerCase().includes(search.toLowerCase()) || p.category.includes(search)
   );
-
-  const handleAdd = (product: any) => {
-    setProducts([{ ...product, id: products.length + 1 }, ...products]);
-  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-white text-2xl font-bold">المنتجات</h1>
-        <button
-          onClick={() => setShowModal(true)}
+        <div className="flex items-center gap-3">
+          <h1 className="text-white text-2xl font-bold">المنتجات</h1>
+          <span className="text-white/30 text-sm">({products.length})</span>
+          <button onClick={() => fetchProducts()} className="p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-all" title="تحديث">
+            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+          </button>
+        </div>
+        <button onClick={() => setShowModal(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-200"
           style={{ background: "rgba(220,38,38,0.85)", boxShadow: "0 0 15px rgba(220,38,38,0.3)" }}
-          data-testid="button-add-product"
-        >
+          data-testid="button-add-product">
           <Plus size={15} />
           إضافة منتج
         </button>
       </div>
 
+      {error && (
+        <div className="p-3 rounded-xl border border-red-500/25 text-red-400 text-sm" style={{ background: "rgba(220,38,38,0.08)" }}>
+          {error} — تأكد من تسجيل الدخول كمدير
+        </div>
+      )}
+
       <div className="stat-card">
         <div className="flex gap-3 mb-5">
           <div className="relative flex-1">
             <Search size={14} className="absolute top-1/2 -translate-y-1/2 left-3 text-white/30" />
-            <input
-              type="search"
-              placeholder="البحث في المنتجات..."
+            <input type="search" placeholder="البحث في المنتجات..."
               className="w-full bg-white/5 border border-white/8 rounded-xl py-2 pl-8 pr-4 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/40 transition-colors"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+              value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <button className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/8 text-white/50 hover:text-white text-sm transition-all">
-            <Filter size={14} />
-            فلتر
+            <Filter size={14} />فلتر
           </button>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/[0.06]">
-                {["المنتج", "الفئة", "السعر", "المخزون", "الحالة", ""].map((h) => (
-                  <th key={h} className="text-right text-white/35 font-medium text-xs pb-3 px-2">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((p) => (
-                <tr key={p.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
-                  <td className="py-3 px-2">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-                        style={{ background: "linear-gradient(135deg, rgba(220,38,38,0.3), rgba(220,38,38,0.1))" }}
-                      >
-                        {p.id}
-                      </div>
-                      <span className="text-white/80 font-medium text-xs truncate max-w-[200px]">{p.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-2">
-                    <span className="text-white/50 text-xs px-2 py-0.5 rounded-full border border-white/10 bg-white/5">
-                      {p.category}
-                    </span>
-                  </td>
-                  <td className="py-3 px-2 text-white font-bold text-xs" style={{ fontFamily: "'Orbitron', monospace" }}>
-                    {p.price.toLocaleString()} JOD
-                  </td>
-                  <td className="py-3 px-2 text-white/60 text-xs">{p.stock}</td>
-                  <td className="py-3 px-2">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${stockStyles[p.status]}`}>
-                      {p.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-2">
-                    <button className="text-xs text-red-400 hover:text-red-300 transition-colors font-medium">
-                      تعديل
-                    </button>
-                  </td>
+        {loading ? (
+          <div className="flex items-center justify-center py-12 gap-3">
+            <Loader2 size={24} className="animate-spin text-red-500" />
+            <span className="text-white/40 text-sm">جارٍ التحميل...</span>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/[0.06]">
+                  {["المنتج", "الفئة", "السعر", "المخزون", "الحالة", ""].map((h) => (
+                    <th key={h} className="text-right text-white/35 font-medium text-xs pb-3 px-2">{h}</th>
+                  ))}
                 </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="py-8 text-center text-white/30 text-sm">لا توجد نتائج</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filtered.map((p) => {
+                  const status = stockStatus(p.stock);
+                  return (
+                    <tr key={p.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                      <td className="py-3 px-2">
+                        <div className="flex items-center gap-3">
+                          {p.imageUrl ? (
+                            <img src={p.imageUrl} alt={p.name} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                              style={{ background: "linear-gradient(135deg, rgba(220,38,38,0.3), rgba(220,38,38,0.1))" }}>
+                              {p.id}
+                            </div>
+                          )}
+                          <span className="text-white/80 font-medium text-xs truncate max-w-[200px]">{p.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-2">
+                        <span className="text-white/50 text-xs px-2 py-0.5 rounded-full border border-white/10 bg-white/5">
+                          {categoryLabel[p.category] || p.category}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 text-white font-bold text-xs" style={{ fontFamily: "'Orbitron', monospace" }}>
+                        {p.price.toLocaleString()} JOD
+                      </td>
+                      <td className="py-3 px-2 text-white/60 text-xs">{p.stock}</td>
+                      <td className="py-3 px-2">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${stockStyles[status]}`}>{status}</span>
+                      </td>
+                      <td className="py-3 px-2">
+                        <button onClick={() => handleDelete(p.id)} disabled={deleting === p.id}
+                          className="text-xs text-red-400 hover:text-red-300 transition-colors font-medium flex items-center gap-1">
+                          {deleting === p.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                          حذف
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {filtered.length === 0 && !loading && (
+                  <tr><td colSpan={6} className="py-8 text-center text-white/30 text-sm">لا توجد منتجات</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <AddProductModal open={showModal} onClose={() => setShowModal(false)} onAdd={handleAdd} />

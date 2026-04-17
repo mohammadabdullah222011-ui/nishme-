@@ -1,7 +1,7 @@
 import { Link } from "wouter";
-import { Monitor, Gamepad2, Headphones, Disc, ChevronLeft, Zap, Shield, Truck } from "lucide-react";
+import { Monitor, Gamepad2, Headphones, Disc, ChevronLeft, Zap, Shield, Truck, Loader2 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
-import { featuredProducts } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 
 const categoryIcons: Record<string, React.ReactNode> = {
   Monitor: <Monitor size={28} />,
@@ -36,6 +36,9 @@ const features = [
 ];
 
 export default function HomePage() {
+  const { products, loading } = useProducts();
+  const featuredProducts = products.slice(0, 6);
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -237,11 +240,18 @@ export default function HomePage() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {featuredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12 gap-3">
+              <Loader2 size={28} className="animate-spin text-red-500" />
+              <span className="text-white/40">جارٍ تحميل المنتجات...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {featuredProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
