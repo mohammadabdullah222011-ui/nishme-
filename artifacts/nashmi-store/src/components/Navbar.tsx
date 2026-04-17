@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation, useRouter } from "wouter";
+import { Link, useLocation } from "wouter";
 import { ShoppingCart, Menu, X, User, LogOut, Settings, LayoutDashboard, Shield } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { useUser } from "@/context/UserContext";
@@ -16,8 +16,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const [location] = useLocation();
-  const { navigate } = useRouter();
+  const [location, navigate] = useLocation();
   const { totalItems } = useCart();
   const { user, logout, isAdmin } = useUser();
 
