@@ -1,18 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, Plus, Filter, Trash2, Loader2, RefreshCw } from "lucide-react";
-import AddProductModal from "@/components/AddProductModal";
+import { Search, Plus, Filter, Trash2, Loader2, RefreshCw, Pencil } from "lucide-react";
+import AddProductModal, { type ProductFormData } from "@/components/AddProductModal";
 import { adminApi, type AdminProduct } from "@/lib/api";
-
-const categoryMap: Record<string, string> = {
-  "كمبيوتر": "pc",
-  "كونسول": "consoles",
-  "إكسسوارات": "accessories",
-  "ألعاب": "games",
-  "pc": "pc",
-  "consoles": "consoles",
-  "accessories": "accessories",
-  "games": "games",
-};
 
 const categoryLabel: Record<string, string> = {
   pc: "كمبيوتر",
@@ -21,23 +10,24 @@ const categoryLabel: Record<string, string> = {
   games: "ألعاب",
 };
 
-const stockStyles: Record<string, string> = {
-  "متوفر": "text-green-400 bg-green-400/10 border-green-400/20",
-  "منخفض": "text-orange-400 bg-orange-400/10 border-orange-400/20",
-  "نفد": "text-red-400 bg-red-400/10 border-red-400/20",
-};
-
 function stockStatus(stock: number) {
   if (stock === 0) return "نفد";
   if (stock <= 5) return "منخفض";
   return "متوفر";
 }
 
+const stockStyles: Record<string, string> = {
+  "متوفر": "text-green-400 bg-green-400/10 border-green-400/20",
+  "منخفض": "text-orange-400 bg-orange-400/10 border-orange-400/20",
+  "نفد": "text-red-400 bg-red-400/10 border-red-400/20",
+};
+
 export default function Products() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
   const [search, setSearch] = useState("");
   const [deleting, setDeleting] = useState<number | null>(null);
 
@@ -60,51 +50,58 @@ export default function Products() {
     return () => clearInterval(interval);
   }, [fetchProducts]);
 
-  const handleAdd = async (product: any) => {
-    try {
-      const category = categoryMap[product.category] || "pc";
-      await adminApi.addProduct({
-        name: product.name,
-        description: product.name,
-        price: product.price,
-        stock: product.stock,
-        category,
-        badge: "جديد",
-        imageUrl: product.image || "",
-      });
-      await fetchProducts(true);
-    } catch (e: any) {
-      setError(e.message);
+  const handleSave = async (data: ProductFormData) => {
+    if (editingProduct) {
+      const updated = await adminApi.updateProduct(editingProduct.id, data);
+      setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? updated : p)));
+    } else {
+      const created = await adminApi.addProduct(data);
+      setProducts((prev) => [created, ...prev]);
     }
   };
 
+  const openAdd = () => {
+    setEditingProduct(null);
+    setShowModal(true);
+  };
+
+  const openEdit = (product: AdminProduct) => {
+    setEditingProduct(product);
+    setShowModal(true);
+  };
+
   const handleDelete = async (id: number) => {
+    if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
     setDeleting(id);
     try {
       await adminApi.deleteProduct(id);
       setProducts((prev) => prev.filter((p) => p.id !== id));
-    } catch {
-      // ignore
+    } catch (e: any) {
+      setError(e.message);
     } finally {
       setDeleting(null);
     }
   };
 
   const filtered = products.filter(
-    (p) => p.name.toLowerCase().includes(search.toLowerCase()) || p.category.includes(search)
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      (categoryLabel[p.category] || p.category).includes(search)
   );
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-white text-2xl font-bold">المنتجات</h1>
           <span className="text-white/30 text-sm">({products.length})</span>
-          <button onClick={() => fetchProducts()} className="p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-all" title="تحديث">
+          <button onClick={() => fetchProducts()} title="تحديث"
+            className="p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-all">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </button>
         </div>
-        <button onClick={() => setShowModal(true)}
+        <button onClick={openAdd}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all duration-200"
           style={{ background: "rgba(220,38,38,0.85)", boxShadow: "0 0 15px rgba(220,38,38,0.3)" }}
           data-testid="button-add-product">
@@ -114,11 +111,13 @@ export default function Products() {
       </div>
 
       {error && (
-        <div className="p-3 rounded-xl border border-red-500/25 text-red-400 text-sm" style={{ background: "rgba(220,38,38,0.08)" }}>
-          {error} — تأكد من تسجيل الدخول كمدير
+        <div className="p-3 rounded-xl border border-red-500/25 text-red-400 text-sm flex items-center gap-2"
+          style={{ background: "rgba(220,38,38,0.08)" }}>
+          ⚠️ {error}
         </div>
       )}
 
+      {/* Table card */}
       <div className="stat-card">
         <div className="flex gap-3 mb-5">
           <div className="relative flex-1">
@@ -142,7 +141,7 @@ export default function Products() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06]">
-                  {["المنتج", "الفئة", "السعر", "المخزون", "الحالة", ""].map((h) => (
+                  {["المنتج", "الفئة", "السعر", "المخزون", "الحالة", "الإجراءات"].map((h) => (
                     <th key={h} className="text-right text-white/35 font-medium text-xs pb-3 px-2">{h}</th>
                   ))}
                 </tr>
@@ -155,14 +154,19 @@ export default function Products() {
                       <td className="py-3 px-2">
                         <div className="flex items-center gap-3">
                           {p.imageUrl ? (
-                            <img src={p.imageUrl} alt={p.name} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                            <img src={p.imageUrl} alt={p.name} className="w-9 h-9 rounded-lg object-cover flex-shrink-0 border border-white/10" />
                           ) : (
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
                               style={{ background: "linear-gradient(135deg, rgba(220,38,38,0.3), rgba(220,38,38,0.1))" }}>
                               {p.id}
                             </div>
                           )}
-                          <span className="text-white/80 font-medium text-xs truncate max-w-[200px]">{p.name}</span>
+                          <div>
+                            <p className="text-white/85 font-medium text-xs truncate max-w-[180px]">{p.name}</p>
+                            {p.badge && (
+                              <span className="text-[10px] text-red-400/70">{p.badge}</span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="py-3 px-2">
@@ -171,24 +175,40 @@ export default function Products() {
                         </span>
                       </td>
                       <td className="py-3 px-2 text-white font-bold text-xs" style={{ fontFamily: "'Orbitron', monospace" }}>
-                        {p.price.toLocaleString()} JOD
+                        {p.price.toLocaleString("en")} JOD
                       </td>
                       <td className="py-3 px-2 text-white/60 text-xs">{p.stock}</td>
                       <td className="py-3 px-2">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${stockStyles[status]}`}>{status}</span>
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${stockStyles[status]}`}>
+                          {status}
+                        </span>
                       </td>
                       <td className="py-3 px-2">
-                        <button onClick={() => handleDelete(p.id)} disabled={deleting === p.id}
-                          className="text-xs text-red-400 hover:text-red-300 transition-colors font-medium flex items-center gap-1">
-                          {deleting === p.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                          حذف
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => openEdit(p)}
+                            className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium flex items-center gap-1"
+                            data-testid={`button-edit-${p.id}`}>
+                            <Pencil size={12} />
+                            تعديل
+                          </button>
+                          <span className="text-white/15">|</span>
+                          <button onClick={() => handleDelete(p.id)} disabled={deleting === p.id}
+                            className="text-xs text-red-400 hover:text-red-300 transition-colors font-medium flex items-center gap-1 disabled:opacity-50"
+                            data-testid={`button-delete-${p.id}`}>
+                            {deleting === p.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+                            حذف
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
                 })}
                 {filtered.length === 0 && !loading && (
-                  <tr><td colSpan={6} className="py-8 text-center text-white/30 text-sm">لا توجد منتجات</td></tr>
+                  <tr>
+                    <td colSpan={6} className="py-10 text-center text-white/30 text-sm">
+                      {search ? "لا توجد نتائج للبحث" : "لا توجد منتجات — اضغط إضافة منتج للبدء"}
+                    </td>
+                  </tr>
                 )}
               </tbody>
             </table>
@@ -196,7 +216,12 @@ export default function Products() {
         )}
       </div>
 
-      <AddProductModal open={showModal} onClose={() => setShowModal(false)} onAdd={handleAdd} />
+      <AddProductModal
+        open={showModal}
+        onClose={() => { setShowModal(false); setEditingProduct(null); }}
+        onSave={handleSave}
+        editingProduct={editingProduct}
+      />
     </div>
   );
 }

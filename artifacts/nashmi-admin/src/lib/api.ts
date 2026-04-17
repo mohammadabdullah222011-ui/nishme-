@@ -31,6 +31,9 @@ export const adminApi = {
   addProduct: (data: Partial<AdminProduct>) =>
     req<AdminProduct>("POST", "/products", data),
 
+  updateProduct: (id: number, data: Partial<AdminProduct>) =>
+    req<AdminProduct>("PUT", `/products/${id}`, data),
+
   deleteProduct: (id: number) =>
     req<{ success: boolean }>("DELETE", `/products/${id}`),
 
