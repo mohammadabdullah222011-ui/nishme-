@@ -156,7 +156,14 @@ export default function Dashboard() {
 
       {/* Modals */}
       <AddOrderModal open={orderModal} onClose={() => setOrderModal(false)} onAdd={() => {}} />
-      <AddProductModal open={productModal} onClose={() => setProductModal(false)} onAdd={() => {}} />
+      <AddProductModal
+        open={productModal}
+        onClose={() => setProductModal(false)}
+        onSave={async (data) => {
+          const { adminApi } = await import("@/lib/api");
+          await adminApi.addProduct(data);
+        }}
+      />
       <AddSaleModal open={saleModal} onClose={() => setSaleModal(false)} onAdd={() => {}} />
     </div>
   );
