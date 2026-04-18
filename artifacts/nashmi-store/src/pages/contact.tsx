@@ -16,9 +16,9 @@ export default function ContactPage() {
   };
 
   const contactInfo = [
-    { icon: Mail, label: "البريد الإلكتروني", value: "info@nashmi.sa" },
-    { icon: Phone, label: "رقم الجوال", value: "+966 50 000 0000" },
-    { icon: MapPin, label: "العنوان", value: "الرياض، المملكة العربية السعودية" },
+    { icon: Mail, label: "البريد الإلكتروني", value: "info@nashmi.jo" },
+    { icon: Phone, label: "رقم الجوال", value: "+962 79 000 0000" },
+    { icon: MapPin, label: "العنوان", value: "عمّان، المملكة الأردنية الهاشمية" },
   ];
 
   return (

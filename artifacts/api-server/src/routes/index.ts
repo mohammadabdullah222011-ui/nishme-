@@ -4,6 +4,7 @@ import authRouter from "./auth.js";
 import productsRouter from "./products.js";
 import ordersRouter from "./orders.js";
 import dashboardRouter from "./dashboard.js";
+import usersRouter from "./users.js";
 
 const router: IRouter = Router();
 
@@ -12,5 +13,6 @@ router.use(authRouter);
 router.use(productsRouter);
 router.use(ordersRouter);
 router.use(dashboardRouter);
+router.use(usersRouter);
 
 export default router;

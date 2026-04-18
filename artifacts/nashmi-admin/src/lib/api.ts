@@ -42,6 +42,14 @@ export const adminApi = {
   updateOrderStatus: (id: number, status: string) =>
     req<AdminOrder>("PUT", `/orders/${id}/status`, { status }),
 
+  createManualOrder: (customerName: string, total: number, status: string) =>
+    req<AdminOrder>("POST", "/orders/manual", { customerName, total, status }),
+
+  getUsers: () => req<AdminUser[]>("GET", "/users"),
+
+  updateUserRole: (id: number, role: string) =>
+    req<{ id: number; name: string; email: string; role: string }>("PUT", `/users/${id}/role`, { role }),
+
   dashboard: () => req<DashboardData>("GET", "/dashboard"),
 };
 
@@ -66,6 +74,16 @@ export interface AdminOrder {
   status: string;
   customerName: string;
   createdAt: string;
+}
+
+export interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: string;
+  orderCount: number;
+  totalSpent: number;
 }
 
 export interface DashboardData {

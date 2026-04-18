@@ -63,6 +63,26 @@ router.get("/orders/my", requireAuth, async (req, res) => {
   }
 });
 
+// POST /api/orders/manual (admin creates manual order)
+router.post("/orders/manual", requireAdmin, async (req, res) => {
+  try {
+    const { customerName, total, status } = req.body as { customerName: string; total: number; status: string };
+    if (!customerName || total === undefined) {
+      res.status(400).json({ error: "اسم العميل والمبلغ مطلوبان" });
+      return;
+    }
+    const [order] = await db.insert(ordersTable).values({
+      userId: null,
+      total: Number(total),
+      status: status || "pending",
+      customerName,
+    }).returning();
+    res.status(201).json(order);
+  } catch {
+    res.status(500).json({ error: "خطأ في الخادم" });
+  }
+});
+
 // GET /api/orders (admin)
 router.get("/orders", requireAdmin, async (req, res) => {
   try {

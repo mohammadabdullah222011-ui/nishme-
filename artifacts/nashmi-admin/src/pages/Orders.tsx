@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, Filter, Download, RefreshCw, Loader2, ChevronDown } from "lucide-react";
+import { Search, Filter, Download, RefreshCw, Loader2, ChevronDown, Plus, X } from "lucide-react";
 import { adminApi, type AdminOrder } from "@/lib/api";
 
 const statusToAr: Record<string, string> = {
@@ -38,12 +38,108 @@ function formatDate(iso: string) {
   }
 }
 
+function AddOrderModal({ onClose, onAdded }: { onClose: () => void; onAdded: (o: AdminOrder) => void }) {
+  const [customerName, setCustomerName] = useState("");
+  const [total, setTotal] = useState("");
+  const [status, setStatus] = useState("pending");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customerName.trim() || !total) return;
+    setLoading(true);
+    setError("");
+    try {
+      const order = await adminApi.createManualOrder(customerName.trim(), Number(total), status);
+      onAdded(order);
+      onClose();
+    } catch (e: any) {
+      setError(e.message || "فشل إنشاء الطلب");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(6px)" }}>
+      <div className="w-full max-w-md mx-4 rounded-2xl p-6 border border-white/10"
+        style={{ background: "linear-gradient(135deg, rgba(20,20,20,0.98), rgba(10,10,10,0.98))" }}>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-white font-bold text-lg">إضافة طلب يدوي</h2>
+          <button onClick={onClose} className="text-white/30 hover:text-white transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="block text-white/50 text-xs font-medium mb-1.5">اسم العميل *</label>
+            <input
+              required
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="مثال: أحمد الحسن"
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-white/50 text-xs font-medium mb-1.5">المبلغ الإجمالي (JD) *</label>
+            <input
+              required
+              type="number"
+              min="0"
+              step="0.01"
+              value={total}
+              onChange={(e) => setTotal(e.target.value)}
+              placeholder="0.00"
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors"
+              dir="ltr"
+            />
+          </div>
+          <div>
+            <label className="block text-white/50 text-xs font-medium mb-1.5">الحالة</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-4 text-white text-sm focus:outline-none focus:border-red-500/50 transition-colors"
+              style={{ background: "rgba(255,255,255,0.05)" }}>
+              <option value="pending" style={{ background: "#111" }}>معلق</option>
+              <option value="shipped" style={{ background: "#111" }}>قيد الشحن</option>
+              <option value="completed" style={{ background: "#111" }}>مكتمل</option>
+              <option value="cancelled" style={{ background: "#111" }}>ملغي</option>
+            </select>
+          </div>
+
+          {error && <p className="text-red-400 text-xs">{error}</p>}
+
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose}
+              className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white text-sm font-semibold transition-all">
+              إلغاء
+            </button>
+            <button type="submit" disabled={loading}
+              className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              style={{ background: "rgba(220,38,38,0.85)", boxShadow: "0 0 15px rgba(220,38,38,0.3)" }}>
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+              إضافة الطلب
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function Orders() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const fetchOrders = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -88,6 +184,13 @@ export default function Orders() {
 
   return (
     <div className="space-y-6">
+      {showAddModal && (
+        <AddOrderModal
+          onClose={() => setShowAddModal(false)}
+          onAdded={(order) => setOrders((prev) => [order, ...prev])}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -98,9 +201,17 @@ export default function Orders() {
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </button>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-all">
-          <Download size={15} />تصدير
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+            style={{ background: "rgba(220,38,38,0.85)", boxShadow: "0 0 15px rgba(220,38,38,0.3)" }}>
+            <Plus size={15} />طلب يدوي
+          </button>
+          <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold border border-white/10 text-white/60 hover:text-white hover:border-white/20 transition-all">
+            <Download size={15} />تصدير
+          </button>
+        </div>
       </div>
 
       {/* Quick stats */}
@@ -172,7 +283,7 @@ export default function Orders() {
                       </td>
                       <td className="py-3 px-2">
                         <span className="text-white font-bold text-xs" style={{ fontFamily: "'Orbitron', monospace" }}>
-                          {order.total.toLocaleString("en")} JOD
+                          {order.total.toLocaleString("en")} JD
                         </span>
                       </td>
                       <td className="py-3 px-2">
@@ -207,7 +318,7 @@ export default function Orders() {
                 {filtered.length === 0 && !loading && (
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-white/30 text-sm">
-                      {search ? "لا توجد نتائج" : "لا توجد طلبات حتى الآن — ستظهر هنا عند تسجيل أول طلب"}
+                      {search ? "لا توجد نتائج" : "لا توجد طلبات حتى الآن"}
                     </td>
                   </tr>
                 )}
@@ -218,9 +329,9 @@ export default function Orders() {
 
         {orders.length > 0 && (
           <div className="mt-4 pt-4 border-t border-white/[0.05] flex items-center justify-between">
-            <span className="text-white/30 text-xs">إجمالي الإيرادات من الطلبات</span>
+            <span className="text-white/30 text-xs">إجمالي الإيرادات</span>
             <span className="text-white font-bold text-sm" style={{ fontFamily: "'Orbitron', monospace" }}>
-              {totalRevenue.toLocaleString("en")} JOD
+              {totalRevenue.toLocaleString("en")} JD
             </span>
           </div>
         )}
