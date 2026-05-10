@@ -1,0 +1,44 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "FhShM652eHnNYipbT8YXh"
+uri = "file://artifacts/nashmi-store/src/assets/hero.png"
+type = "image"
+title = "gaming hero banner"
+
+[[generated]]
+id = "4eG12hActVM1gfbDJqChv"
+uri = "file://artifacts/nashmi-store/src/assets/mouse.png"
+type = "image"
+title = "gaming mouse"
+
+[[generated]]
+id = "Qv84GZM5BhPyiaRsW6Kx1"
+uri = "file://artifacts/nashmi-store/src/assets/keyboard.png"
+type = "image"
+title = "mechanical keyboard"
+
+[[generated]]
+id = "buG-UmQYp84ThZR0ZxZPs"
+uri = "file://artifacts/nashmi-store/src/assets/headset.png"
+type = "image"
+title = "gaming headset"
+
+[[generated]]
+id = "s5VDWAp0SAEOEEkUZb64l"
+uri = "file://artifacts/nashmi-store/src/assets/monitor.png"
+type = "image"
+title = "gaming monitor"
+
+[[generated]]
+id = "FAyjCNqU3MrQmDIwX1JRt"
+uri = "file://artifacts/nashmi-store/src/assets/console.png"
+type = "image"
+title = "game console"
+
+[[generated]]
+id = "o5sRJ6k5FRZGcxtjHaAx8"
+uri = "file://artifacts/nashmi-store/src/assets/chair.png"
+type = "image"
+title = "gaming chair"

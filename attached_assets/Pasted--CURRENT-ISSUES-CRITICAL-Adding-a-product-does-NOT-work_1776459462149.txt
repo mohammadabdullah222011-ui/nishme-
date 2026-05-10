@@ -1,0 +1,93 @@
+🔴 CURRENT ISSUES (CRITICAL)
+❌ Adding a product does NOT work
+Product is not saved in database
+It does not appear in admin dashboard or products page
+❌ Creating orders does NOT work
+Users cannot successfully place orders
+Orders are not saved in database
+Multiple product orders must be supported
+❌ Admin product management incomplete
+No EDIT button for products
+Update functionality is missing or broken
+❌ Frontend and backend are NOT properly connected
+Some API calls fail or are not triggered
+Some requests are missing authentication token
+❌ System feels static in some areas
+Data is not refreshing after operations
+🎯 YOUR GOALS
+
+Fix all broken functionality and ensure:
+
+Adding product → saves to DB → instantly يظهر في الموقع
+Editing product → updates DB → يظهر التعديل فورًا
+Deleting product → ينحذف من DB → يختفي من الموقع
+Creating order → ينحفظ في orders + order_items
+User can order multiple products in one order
+Dashboard statistics update correctly from real DB data
+🔍 DEBUG REQUIREMENTS
+
+You MUST:
+
+Check all backend routes:
+/api/products (POST, GET, PUT, DELETE)
+/api/orders (POST)
+Ensure:
+All async DB operations use await
+Proper error handling with try/catch
+Console logs for debugging
+Fix authentication:
+Ensure JWT token is sent in all protected requests
+Fix any 401 / 403 issues
+Validate request body:
+Ensure correct JSON structure is sent from frontend
+🧠 BACKEND FIXES
+PRODUCTS
+Ensure POST /api/products correctly inserts into database
+Ensure PUT /api/products/ updates product
+Return the created/updated product in response
+ORDERS
+Fix POST /api/orders:
+Accept array of items
+Fetch product prices from DB
+Calculate total correctly
+Insert into orders table
+Insert each item into order_items table
+🎨 FRONTEND FIXES
+Fix API calls:
+Ensure fetch/axios is correctly implemented
+Add Authorization header where needed
+After each action:
+Re-fetch data OR update state directly
+Add missing features:
+Edit product button
+Update product form
+Proper error messages
+⚡ REAL-TIME FEEL
+
+After:
+
+adding product
+editing product
+deleting product
+creating order
+
+The UI MUST update immediately (no manual refresh)
+
+🧪 TESTING
+
+Simulate full flow:
+
+Admin logs in
+Adds product → appears instantly
+Edits product → updates instantly
+User places order with multiple products
+Order appears in dashboard
+Dashboard numbers update correctly
+🚀 FINAL RESULT
+
+The system must behave like a real e-commerce platform:
+
+Fully dynamic
+No fake/static data
+All operations working end-to-end
+Clean and stable code
