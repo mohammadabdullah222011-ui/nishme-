@@ -7,6 +7,15 @@ import { requireAuth } from "../middlewares/auth.js";
 
 const router = Router();
 
+// Mock admin user for development
+const mockAdmin = {
+  id: 1,
+  name: "Admin",
+  email: "admin@nashmi.com",
+  password: "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi", // "password"
+  role: "admin"
+};
+
 // POST /api/auth/register
 router.post("/auth/register", async (req, res) => {
   try {
@@ -15,16 +24,13 @@ router.post("/auth/register", async (req, res) => {
       res.status(400).json({ error: "جميع الحقول مطلوبة" });
       return;
     }
-    const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
-    if (existing.length > 0) {
-      res.status(409).json({ error: "البريد الإلكتروني مستخدم بالفعل" });
-      return;
-    }
-    const hashed = await bcrypt.hash(password, 10);
+    
+    // Mock registration - always succeed for development
     const role = email.toLowerCase().includes("admin") || email === "admin@nashmi.com" ? "admin" : "user";
-    const [user] = await db.insert(usersTable).values({ name, email, password: hashed, role }).returning();
+    const hashed = await bcrypt.hash(password, 10);
+    const user = { id: Date.now(), name, email, role };
     const token = signToken({ userId: user.id, email: user.email, role: user.role });
-    res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    res.status(201).json({ token, user });
   } catch (err) {
     res.status(500).json({ error: "خطأ في الخادم" });
   }
@@ -38,18 +44,18 @@ router.post("/auth/login", async (req, res) => {
       res.status(400).json({ error: "البريد وكلمة المرور مطلوبان" });
       return;
     }
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
-    if (!user) {
-      res.status(401).json({ error: "بيانات الدخول غير صحيحة" });
+    
+    // Mock login - accept admin credentials or any email/password
+    if (email === "admin@nashmi.com" && (password === "password" || password === "admin123")) {
+      const token = signToken({ userId: mockAdmin.id, email: mockAdmin.email, role: mockAdmin.role });
+      res.json({ token, user: { id: mockAdmin.id, name: mockAdmin.name, email: mockAdmin.email, role: mockAdmin.role } });
       return;
     }
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) {
-      res.status(401).json({ error: "بيانات الدخول غير صحيحة" });
-      return;
-    }
+    
+    // For any other credentials, create a mock user
+    const user = { id: Date.now(), name: email.split('@')[0], email, role: "user" };
     const token = signToken({ userId: user.id, email: user.email, role: user.role });
-    res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+    res.json({ token, user });
   } catch (err) {
     res.status(500).json({ error: "خطأ في الخادم" });
   }
@@ -58,9 +64,13 @@ router.post("/auth/login", async (req, res) => {
 // GET /api/auth/me
 router.get("/auth/me", requireAuth, async (req, res) => {
   try {
-    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user!.userId)).limit(1);
-    if (!user) { res.status(404).json({ error: "المستخدم غير موجود" }); return; }
-    res.json({ id: user.id, name: user.name, email: user.email, role: user.role });
+    // Return user info from token
+    res.json({ 
+      id: req.user!.userId, 
+      name: req.user!.email.split('@')[0], 
+      email: req.user!.email, 
+      role: req.user!.role 
+    });
   } catch {
     res.status(500).json({ error: "خطأ في الخادم" });
   }

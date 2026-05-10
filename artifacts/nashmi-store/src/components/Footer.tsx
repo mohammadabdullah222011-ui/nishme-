@@ -83,15 +83,15 @@ export default function Footer() {
             <ul className="flex flex-col gap-4">
               <li className="flex items-center gap-3 text-white/50 text-sm">
                 <Mail size={16} className="text-red-400 flex-shrink-0" />
-                info@nashmi.sa
+                nashmisouq25@gmail.com
               </li>
               <li className="flex items-center gap-3 text-white/50 text-sm">
                 <Phone size={16} className="text-red-400 flex-shrink-0" />
-                +966 50 000 0000
+                +962 795900316
               </li>
               <li className="flex items-start gap-3 text-white/50 text-sm">
                 <MapPin size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
-                الرياض، المملكة العربية السعودية
+                Jordan, Amman
               </li>
             </ul>
           </div>

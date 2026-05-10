@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Search, Shield, ShieldOff, UserCheck, Loader2, RefreshCw, Users as UsersIcon } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/api";
+import { useLang } from "@/i18n/context";
 
 function joinedDate(iso: string) {
   try {
@@ -9,6 +10,7 @@ function joinedDate(iso: string) {
 }
 
 export default function Users() {
+  const { t } = useLang();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -50,24 +52,25 @@ export default function Users() {
     }
   };
 
-  const filtered = users.filter((u) => {
+  const usersArray = Array.isArray(users) ? users : [];
+  const filtered = usersArray.filter((u) => {
     const matchSearch = u.name.includes(search) || u.email.toLowerCase().includes(search.toLowerCase());
     const matchRole = roleFilter === "all" || u.role === roleFilter;
     return matchSearch && matchRole;
   });
 
-  const adminCount = users.filter((u) => u.role === "admin").length;
-  const userCount = users.filter((u) => u.role === "user").length;
-  const totalSpent = users.reduce((s, u) => s + u.totalSpent, 0);
+  const adminCount = usersArray.filter((u) => u.role === "admin").length;
+  const userCount = usersArray.filter((u) => u.role === "user").length;
+  const totalSpent = usersArray.reduce((s, u) => s + u.totalSpent, 0);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-white text-2xl font-bold">المستخدمون والصلاحيات</h1>
-          <span className="text-white/30 text-sm">({users.length})</span>
-          <button onClick={() => fetchUsers()} title="تحديث"
+          <h1 className="text-white text-2xl font-bold">{t("المستخدمون والصلاحيات")}</h1>
+          <span className="text-white/30 text-sm">{usersArray.length})</span>
+          <button onClick={() => fetchUsers()} title={t("تحديث")}
             className="p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-all">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </button>
@@ -77,10 +80,10 @@ export default function Users() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "إجمالي المستخدمين", value: users.length, color: "#dc2626" },
-          { label: "المديرون", value: adminCount, color: "#f87171" },
-          { label: "العملاء", value: userCount, color: "#60a5fa" },
-          { label: "إجمالي الإنفاق", value: `${totalSpent.toLocaleString("en")} JD`, color: "#34d399", small: true },
+          { label: t("إجمالي المستخدمين"), value: users.length, color: "#dc2626" },
+          { label: t("المديرون"), value: adminCount, color: "#f87171" },
+          { label: t("العملاء"), value: userCount, color: "#60a5fa" },
+          { label: t("إجمالي الإنفاق"), value: `${totalSpent.toLocaleString("en")} JD`, color: "#34d399", small: true },
         ].map((item) => (
           <div key={item.label} className="stat-card text-center py-3">
             <p className={`font-bold ${item.small ? "text-lg" : "text-2xl"}`}
@@ -102,7 +105,7 @@ export default function Users() {
         <div className="flex gap-3 mb-5 flex-wrap">
           <div className="relative flex-1 min-w-[180px]">
             <Search size={14} className="absolute top-1/2 -translate-y-1/2 left-3 text-white/30" />
-            <input type="search" placeholder="البحث بالاسم أو البريد..."
+            <input type="search" placeholder={t("البحث بالاسم أو البريد...")}
               className="w-full bg-white/5 border border-white/8 rounded-xl py-2 pl-8 pr-4 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/40 transition-colors"
               value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
@@ -111,7 +114,7 @@ export default function Users() {
               <button key={r} onClick={() => setRoleFilter(r)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${roleFilter === r ? "text-white" : "text-white/35 hover:text-white/60"}`}
                 style={roleFilter === r ? { background: "rgba(220,38,38,0.3)", boxShadow: "0 0 10px rgba(220,38,38,0.2)" } : {}}>
-                {r === "all" ? "الكل" : r === "admin" ? "مدير" : "عميل"}
+                {r === "all" ? t("الكل") : r === "admin" ? t("مدير") : t("عميل")}
               </button>
             ))}
           </div>
@@ -120,14 +123,14 @@ export default function Users() {
         {loading ? (
           <div className="flex items-center justify-center py-12 gap-3">
             <Loader2 size={24} className="animate-spin text-red-500" />
-            <span className="text-white/40 text-sm">جارٍ تحميل المستخدمين...</span>
+            <span className="text-white/40 text-sm">{t("جارٍ تحميل المستخدمين...")}</span>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06]">
-                  {["المستخدم", "البريد الإلكتروني", "الطلبات", "الإنفاق (JD)", "الدور", "تغيير الصلاحية", "تاريخ الانضمام"].map((h) => (
+                  {[t("المستخدم"), t("البريد الإلكتروني"), t("الطلبات"), t("الإنفاق (JD)"), t("الدور"), t("تغيير الصلاحية"), t("تاريخ الانضمام")].map((h) => (
                     <th key={h} className="text-right text-white/35 font-medium text-xs pb-3 px-2">{h}</th>
                   ))}
                 </tr>
@@ -158,11 +161,11 @@ export default function Users() {
                     <td className="py-3 px-2">
                       {user.role === "admin" ? (
                         <span className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border w-fit text-red-400 bg-red-400/10 border-red-400/25">
-                          <Shield size={10} />مدير
+                          <Shield size={10} />{t("مدير")}
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border w-fit text-blue-300 bg-blue-400/8 border-blue-400/20">
-                          <UserCheck size={10} />عميل
+                          <UserCheck size={10} />{t("عميل")}
                         </span>
                       )}
                     </td>
@@ -174,17 +177,17 @@ export default function Users() {
                           <button onClick={() => toggleRole(user)}
                             className="text-[10px] px-2 py-0.5 rounded-lg font-bold text-white transition-all"
                             style={{ background: user.role === "admin" ? "rgba(59,130,246,0.3)" : "rgba(220,38,38,0.3)" }}>
-                            تأكيد
+                            {t("تأكيد")}
                           </button>
                           <button onClick={() => setConfirmId(null)}
                             className="text-[10px] px-2 py-0.5 rounded-lg text-white/40 hover:text-white/60 border border-white/10 transition-all">
-                            إلغاء
+                            {t("إلغاء")}
                           </button>
                         </div>
                       ) : (
                         <button onClick={() => setConfirmId(user.id)}
                           className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold border transition-all duration-200 ${user.role === "admin" ? "text-blue-400 border-blue-400/20 hover:bg-blue-400/10" : "text-red-400 border-red-400/20 hover:bg-red-400/10"}`}>
-                          {user.role === "admin" ? <><ShieldOff size={12} />إزالة المدير</> : <><Shield size={12} />ترقية لمدير</>}
+                          {user.role === "admin" ? <><ShieldOff size={12} />{t("إزالة المدير")}</> : <><Shield size={12} />{t("ترقية لمدير")}</>}
                         </button>
                       )}
                     </td>
@@ -195,7 +198,7 @@ export default function Users() {
                   <tr>
                     <td colSpan={7} className="py-10 text-center">
                       <UsersIcon size={28} className="mx-auto text-white/10 mb-2" />
-                      <p className="text-white/30 text-sm">{search ? "لا توجد نتائج" : "لا يوجد مستخدمون بعد"}</p>
+                      <p className="text-white/30 text-sm">{search ? t("لا توجد نتائج") : t("لا يوجد مستخدمون بعد")}</p>
                     </td>
                   </tr>
                 )}
@@ -205,9 +208,9 @@ export default function Users() {
         )}
 
         <div className="flex items-center gap-4 mt-4 pt-3 border-t border-white/[0.06]">
-          <p className="text-white/30 text-xs">الصلاحيات:</p>
-          <span className="flex items-center gap-1.5 text-xs text-red-400"><Shield size={11} />مدير — صلاحيات كاملة</span>
-          <span className="flex items-center gap-1.5 text-xs text-blue-300"><UserCheck size={11} />عميل — صلاحيات محدودة</span>
+          <p className="text-white/30 text-xs">{t("الصلاحيات:")}</p>
+          <span className="flex items-center gap-1.5 text-xs text-red-400"><Shield size={11} />{t("مدير — صلاحيات كاملة")}</span>
+          <span className="flex items-center gap-1.5 text-xs text-blue-300"><UserCheck size={11} />{t("عميل — صلاحيات محدودة")}</span>
         </div>
       </div>
     </div>

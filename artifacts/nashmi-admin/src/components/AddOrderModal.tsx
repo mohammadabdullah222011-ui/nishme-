@@ -16,7 +16,11 @@ export default function AddOrderModal({ open, onClose, onAdd }: Props) {
     e.preventDefault();
     if (!form.customer || !form.product || !form.amount) return;
     const id = `ORD-${8842 + Math.floor(Math.random() * 100)}`;
+    
+    console.log("إرسال طلب جديد:", { ...form, amount: Number(form.amount), id, time: "الآن" });
     onAdd({ ...form, amount: Number(form.amount), id, time: "الآن" });
+    console.log("تم إرسال الطلب بنجاح");
+    
     setSaved(true);
     setTimeout(() => { setSaved(false); onClose(); setForm({ customer: "", product: "", amount: "", status: "معلق" }); }, 1000);
   };

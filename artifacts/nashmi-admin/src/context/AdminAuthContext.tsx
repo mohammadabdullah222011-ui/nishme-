@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+                         import { createContext, useContext, useState, useEffect } from "react";
 import { adminApi } from "@/lib/api";
 
 interface AdminAuthState {
@@ -24,6 +24,25 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("nashmi_admin_token", t);
       setToken(t);
       setEmail(user.email);
+      
+      // تحديث لوحة التحكم بعد تسجيل الدخول بنجاح
+      console.log("تم تسجيل الدخول بنجاح وتحديث لوحة التحكم");
+      
+      // تحديث الإحصائيات بعد تسجيل الدخول
+      try {
+        const stats = await adminApi.dashboard();
+        // إرسال إشعار بتحديث الإحصائيات للـ Dashboard
+        window.dispatchEvent(new CustomEvent('dashboardStatsUpdate', { 
+          detail: { 
+            totalRevenue: stats.totalRevenue, 
+            totalOrders: stats.totalOrders, 
+            totalUsers: stats.totalUsers, 
+            totalProducts: stats.totalProducts 
+          } 
+        }));
+      } catch (statsError) {
+        console.error("خطأ في تحديث الإحصائيات بعد تسجيل الدخول:", statsError);
+      }
     } finally {
       setLoading(false);
     }

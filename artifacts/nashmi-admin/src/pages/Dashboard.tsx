@@ -13,8 +13,10 @@ import AddOrderModal from "@/components/AddOrderModal";
 import AddProductModal from "@/components/AddProductModal";
 import AddSaleModal from "@/components/AddSaleModal";
 import { adminApi } from "@/lib/api";
+import { useLang } from "@/i18n/context";
 
 export default function Dashboard() {
+  const { t } = useLang();
   const [orderModal, setOrderModal] = useState(false);
   const [productModal, setProductModal] = useState(false);
   const [saleModal, setSaleModal] = useState(false);
@@ -30,12 +32,23 @@ export default function Dashboard() {
     };
     fetchStats();
     const interval = setInterval(fetchStats, 10000);
-    return () => clearInterval(interval);
+    
+    // الاستماع لتحديثات الإحصائيات من تسجيل الدخول
+    const handleStatsUpdate = (event: CustomEvent) => {
+      setLiveStats(event.detail);
+    };
+    
+    window.addEventListener('dashboardStatsUpdate', handleStatsUpdate as EventListener);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('dashboardStatsUpdate', handleStatsUpdate as EventListener);
+    };
   }, []);
 
   const stats = [
     {
-      title: "إجمالي الإيرادات",
+      title: t("إجمالي الإيرادات"),
       value: liveStats?.totalRevenue ?? 469000,
       unit: "JOD",
       change: 18.5,
@@ -44,28 +57,28 @@ export default function Dashboard() {
       glowRed: true,
     },
     {
-      title: "إجمالي الطلبات",
+      title: t("إجمالي الطلبات"),
       value: liveStats?.totalOrders ?? 3155,
       change: 12.3,
       icon: <ShoppingCart size={18} className="text-blue-400" />,
       iconBg: "rgba(59,130,246,0.12)",
     },
     {
-      title: "المستخدمون المسجلون",
+      title: t("المستخدمون المسجلون"),
       value: liveStats?.totalUsers ?? 0,
       change: 8.7,
       icon: <Users size={18} className="text-green-400" />,
       iconBg: "rgba(16,185,129,0.12)",
     },
     {
-      title: "المنتجات المتاحة",
+      title: t("المنتجات المتاحة"),
       value: liveStats?.totalProducts ?? 0,
       change: -2.1,
       icon: <Package size={18} className="text-orange-400" />,
       iconBg: "rgba(249,115,22,0.12)",
     },
     {
-      title: "معدل التحويل",
+      title: t("معدل التحويل"),
       value: "7.4",
       unit: "%",
       change: 3.2,
@@ -73,7 +86,7 @@ export default function Dashboard() {
       iconBg: "rgba(139,92,246,0.12)",
     },
     {
-      title: "تقييم المتجر",
+      title: t("تقييم المتجر"),
       value: "4.8",
       unit: "/ 5",
       change: 0.3,
@@ -87,9 +100,9 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-white text-2xl font-bold">لوحة التحكم</h1>
+          <h1 className="text-white text-2xl font-bold">{t("لوحة التحكم")}</h1>
           <p className="text-white/40 text-sm mt-1">
-            مرحباً بك في لوحة إدارة نشمي سوق — آخر تحديث: الآن
+            {t("مرحباً بك في لوحة إدارة نشمي سوق — آخر تحديث: الآن")}
           </p>
         </div>
 
@@ -102,7 +115,7 @@ export default function Dashboard() {
             data-testid="button-dashboard-add-order"
           >
             <Plus size={13} />
-            طلب جديد
+            {t("طلب جديد")}
           </button>
           <button
             onClick={() => setProductModal(true)}
@@ -110,7 +123,7 @@ export default function Dashboard() {
             data-testid="button-dashboard-add-product"
           >
             <Plus size={13} />
-            منتج جديد
+            {t("منتج جديد")}
           </button>
           <button
             onClick={() => setSaleModal(true)}
@@ -118,7 +131,7 @@ export default function Dashboard() {
             data-testid="button-dashboard-add-sale"
           >
             <Plus size={13} />
-            تسجيل مبيعة
+            {t("تسجيل مبيعة")}
           </button>
         </div>
       </div>
@@ -155,16 +168,93 @@ export default function Dashboard() {
       </div>
 
       {/* Modals */}
-      <AddOrderModal open={orderModal} onClose={() => setOrderModal(false)} onAdd={() => {}} />
+      <AddOrderModal 
+        open={orderModal} 
+        onClose={() => setOrderModal(false)} 
+        onAdd={async (order) => {
+          try {
+            const { adminApi } = await import("@/lib/api");
+            await adminApi.createManualOrder(order.customer, order.amount, order.status);
+            // تحديث فوري للإحصائيات بعد إضافة الطلب
+            const stats = await adminApi.dashboard();
+            setLiveStats({ 
+              totalRevenue: stats.totalRevenue, 
+              totalOrders: stats.totalOrders, 
+              totalUsers: stats.totalUsers, 
+              totalProducts: stats.totalProducts 
+            });
+            // إظهار رسالة نجاح
+            console.log("تم إضافة الطلب بنجاح وتحديث لوحة التحكم");
+          } catch (error) {
+            console.error("خطأ في إضافة الطلب:", error);
+          }
+        }} 
+      />
       <AddProductModal
         open={productModal}
         onClose={() => setProductModal(false)}
         onSave={async (data) => {
-          const { adminApi } = await import("@/lib/api");
-          await adminApi.addProduct(data);
+          console.log("إضافة منتج جديد:", data);
+          try {
+            const { adminApi } = await import("@/lib/api");
+            
+            // التأكد من البيانات قبل الإرسال
+            const productData = {
+              name: data.name,
+              description: data.description || "",
+              price: Number(data.price),
+              stock: Number(data.stock),
+              category: data.category || "pc",
+              badge: data.badge || "",
+              imageUrl: data.imageUrl || ""
+            };
+            
+            console.log("البيانات التي سيتم إرسالها:", productData);
+            const result = await adminApi.addProduct(productData);
+            console.log("المنتج تمت إضافته بنجاح:", result);
+            
+            // تحديث الإحصائيات
+            const stats = await adminApi.dashboard();
+            setLiveStats({ 
+              totalRevenue: stats.totalRevenue, 
+              totalOrders: stats.totalOrders, 
+              totalUsers: stats.totalUsers, 
+              totalProducts: stats.totalProducts 
+            });
+            
+            // إغلاق النافذة وتحديث الصفحة
+            setProductModal(false);
+            window.location.reload();
+            
+          } catch (err: any) {
+            console.error("Error adding product:", err);
+            alert("Failed to add product: " + (err.message || ""));
+          }
         }}
       />
-      <AddSaleModal open={saleModal} onClose={() => setSaleModal(false)} onAdd={() => {}} />
+      <AddSaleModal 
+        open={saleModal} 
+        onClose={() => setSaleModal(false)} 
+        onAdd={async (sale) => {
+          try {
+            const { adminApi } = await import("@/lib/api");
+            // إنشاء طلب جديد للمبيعة (لأنه لا يوجد API خاص للمبيعات)
+            await adminApi.createManualOrder(`مبيعات: ${sale.product}`, sale.revenue, "مكتمل");
+            // تحديث فوري للإحصائيات بعد تسجيل المبيعات
+            const stats = await adminApi.dashboard();
+            setLiveStats({ 
+              totalRevenue: stats.totalRevenue, 
+              totalOrders: stats.totalOrders, 
+              totalUsers: stats.totalUsers, 
+              totalProducts: stats.totalProducts 
+            });
+            // إظهار رسالة نجاح
+            console.log("تم تسجيل المبيعات بنجاح وتحديث لوحة التحكم");
+          } catch (error) {
+            console.error("خطأ في تسجيل المبيعات:", error);
+          }
+        }} 
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard,
@@ -14,22 +14,30 @@ import {
   Server,
   FileText,
 } from "lucide-react";
+import { adminApi } from "@/lib/api";
+import { useLang } from "@/i18n/context";
 const logoImg = `${import.meta.env.BASE_URL}logo-nashmi.png`;
 
-const navItems = [
-  { href: "/", icon: LayoutDashboard, label: "لوحة التحكم" },
-  { href: "/analytics", icon: BarChart3, label: "التحليلات" },
-  { href: "/orders", icon: ShoppingCart, label: "الطلبات" },
-  { href: "/products", icon: Package, label: "المنتجات" },
-  { href: "/users", icon: Users, label: "المستخدمون" },
-  { href: "/reports", icon: FileText, label: "التقارير" },
-  { href: "/security", icon: Shield, label: "الأمان" },
-  { href: "/server", icon: Server, label: "الخوادم" },
+interface NavItem {
+  href: string;
+  icon: typeof LayoutDashboard;
+  labelKey: string;
+}
+
+const navItems: NavItem[] = [
+  { href: "/", icon: LayoutDashboard, labelKey: "لوحة التحكم" },
+  { href: "/analytics", icon: BarChart3, labelKey: "التحليلات" },
+  { href: "/orders", icon: ShoppingCart, labelKey: "الطلبات" },
+  { href: "/products", icon: Package, labelKey: "المنتجات" },
+  { href: "/users", icon: Users, labelKey: "المستخدمون" },
+  { href: "/reports", icon: FileText, labelKey: "التقارير" },
+  { href: "/security", icon: Shield, labelKey: "الأمان" },
+  { href: "/server", icon: Server, labelKey: "الخوادم" },
 ];
 
-const bottomItems = [
-  { href: "/notifications", icon: Bell, label: "الإشعارات", badge: 5 },
-  { href: "/settings", icon: Settings, label: "الإعدادات" },
+const bottomItems: (NavItem & { badge?: boolean })[] = [
+  { href: "/notifications", icon: Bell, labelKey: "الإشعارات", badge: true },
+  { href: "/settings", icon: Settings, labelKey: "الإعدادات" },
 ];
 
 interface SidebarProps {
@@ -39,6 +47,21 @@ interface SidebarProps {
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const [location] = useLocation();
+  const [notifCount, setNotifCount] = useState(0);
+  const { t } = useLang();
+
+  const fetchNotifCount = useCallback(async () => {
+    try {
+      const data = await adminApi.getUnreadCount();
+      setNotifCount(data.count);
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifCount();
+    const interval = setInterval(fetchNotifCount, 10000);
+    return () => clearInterval(interval);
+  }, [fetchNotifCount]);
 
   return (
     <aside
@@ -76,17 +99,18 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <nav className="flex-1 overflow-y-auto py-4 px-2 flex flex-col gap-1">
         {!collapsed && (
           <p className="text-white/25 text-[10px] font-semibold uppercase tracking-wider px-3 mb-1">
-            القائمة الرئيسية
+            {t("القائمة الرئيسية")}
           </p>
         )}
-        {navItems.map(({ href, icon: Icon, label }) => {
+        {navItems.map(({ href, icon: Icon, labelKey }) => {
           const isActive = location === href;
+          const label = t(labelKey);
           return (
             <Link key={href} href={href}>
               <div
                 className={`sidebar-link ${isActive ? "active" : "text-white/50"} ${collapsed ? "justify-center px-2" : ""}`}
                 title={collapsed ? label : undefined}
-                data-testid={`sidebar-link-${label}`}
+                data-testid={`sidebar-link-${labelKey}`}
               >
                 <Icon size={18} className="flex-shrink-0" />
                 {!collapsed && <span>{label}</span>}
@@ -98,11 +122,13 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <div className="mt-4 mb-1">
           {!collapsed && (
             <p className="text-white/25 text-[10px] font-semibold uppercase tracking-wider px-3 mb-1">
-              أخرى
+              {t("أخرى")}
             </p>
           )}
-          {bottomItems.map(({ href, icon: Icon, label, badge }) => {
+          {bottomItems.map(({ href, icon: Icon, labelKey, badge }) => {
             const isActive = location === href;
+            const label = t(labelKey);
+            const count = labelKey === "الإشعارات" ? notifCount : 0;
             return (
               <Link key={href} href={href}>
                 <div
@@ -111,17 +137,17 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                 >
                   <div className="relative">
                     <Icon size={18} />
-                    {badge && !collapsed && (
+                    {badge && count > 0 && !collapsed && (
                       <span
-                        className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white"
+                        className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 rounded-full text-[9px] font-bold flex items-center justify-center text-white px-1"
                         style={{ background: "#dc2626" }}
                       >
-                        {badge}
+                        {count > 9 ? "9+" : count}
                       </span>
                     )}
                   </div>
                   {!collapsed && <span>{label}</span>}
-                  {badge && collapsed && (
+                  {badge && count > 0 && collapsed && (
                     <span
                       className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full"
                       style={{ background: "#dc2626", boxShadow: "0 0 6px rgba(220,38,38,0.7)" }}

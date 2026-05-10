@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Search, Plus, Filter, Trash2, Loader2, RefreshCw, Pencil } from "lucide-react";
 import AddProductModal, { type ProductFormData } from "@/components/AddProductModal";
 import { adminApi, type AdminProduct } from "@/lib/api";
+import { useLang } from "@/i18n/context";
 
 const categoryLabel: Record<string, string> = {
   pc: "كمبيوتر",
@@ -23,6 +24,7 @@ const stockStyles: Record<string, string> = {
 };
 
 export default function Products() {
+  const { t } = useLang();
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -38,6 +40,7 @@ export default function Products() {
       setProducts(data);
       setError("");
     } catch (e: any) {
+      console.error("Error fetching products:", e);
       if (!silent) setError(e.message);
     } finally {
       if (!silent) setLoading(false);
@@ -47,16 +50,37 @@ export default function Products() {
   useEffect(() => {
     fetchProducts();
     const interval = setInterval(() => fetchProducts(true), 10000);
-    return () => clearInterval(interval);
+    
+    // الاستماع لتحديثات المنتجات من Dashboard
+    const handleProductsUpdate = (event: CustomEvent) => {
+      if (event.detail.action === 'add') {
+        // إضافة المنتج الجديد إلى القائمة
+        setProducts((prev) => [event.detail.product, ...prev]);
+      }
+    };
+    
+    window.addEventListener('productsUpdate', handleProductsUpdate as EventListener);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('productsUpdate', handleProductsUpdate as EventListener);
+    };
   }, [fetchProducts]);
 
   const handleSave = async (data: ProductFormData) => {
-    if (editingProduct) {
-      const updated = await adminApi.updateProduct(editingProduct.id, data);
-      setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? updated : p)));
-    } else {
-      const created = await adminApi.addProduct(data);
-      setProducts((prev) => [created, ...prev]);
+    try {
+      if (editingProduct) {
+        const updated = await adminApi.updateProduct(editingProduct.id, data);
+        setProducts((prev) => prev.map((p) => (p.id === editingProduct.id ? updated : p)));
+        await fetchProducts(true);
+      } else {
+        const created = await adminApi.addProduct(data);
+        setProducts((prev) => [created, ...(Array.isArray(prev) ? prev : [])]);
+        setShowModal(false);
+        setEditingProduct(null);
+      }
+    } catch (error: any) {
+      alert("Failed to save product: " + (error.message || "Unknown error"));
     }
   };
 
@@ -71,7 +95,7 @@ export default function Products() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("هل أنت متأكد من حذف هذا المنتج؟")) return;
+    if (!confirm("Are you sure you want to delete this product?")) return;
     setDeleting(id);
     try {
       await adminApi.deleteProduct(id);
@@ -83,7 +107,8 @@ export default function Products() {
     }
   };
 
-  const filtered = products.filter(
+  const productsArray = Array.isArray(products) ? products : [];
+  const filtered = productsArray.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       (categoryLabel[p.category] || p.category).includes(search)
@@ -94,9 +119,9 @@ export default function Products() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-white text-2xl font-bold">المنتجات</h1>
-          <span className="text-white/30 text-sm">({products.length})</span>
-          <button onClick={() => fetchProducts()} title="تحديث"
+          <h1 className="text-white text-2xl font-bold">{t("المنتجات")}</h1>
+          <span className="text-white/30 text-sm">({productsArray.length})</span>
+          <button onClick={() => fetchProducts()} title={t("تحديث")}
             className="p-1.5 rounded-lg text-white/30 hover:text-white hover:bg-white/5 transition-all">
             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
           </button>
@@ -106,7 +131,7 @@ export default function Products() {
           style={{ background: "rgba(220,38,38,0.85)", boxShadow: "0 0 15px rgba(220,38,38,0.3)" }}
           data-testid="button-add-product">
           <Plus size={15} />
-          إضافة منتج
+          {t("إضافة منتج")}
         </button>
       </div>
 
@@ -122,26 +147,26 @@ export default function Products() {
         <div className="flex gap-3 mb-5">
           <div className="relative flex-1">
             <Search size={14} className="absolute top-1/2 -translate-y-1/2 left-3 text-white/30" />
-            <input type="search" placeholder="البحث في المنتجات..."
+            <input type="search" placeholder={t("البحث في المنتجات...")}
               className="w-full bg-white/5 border border-white/8 rounded-xl py-2 pl-8 pr-4 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/40 transition-colors"
               value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <button className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/8 text-white/50 hover:text-white text-sm transition-all">
-            <Filter size={14} />فلتر
+            <Filter size={14} />{t("فلتر")}
           </button>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-12 gap-3">
             <Loader2 size={24} className="animate-spin text-red-500" />
-            <span className="text-white/40 text-sm">جارٍ التحميل...</span>
+            <span className="text-white/40 text-sm">{t("جارٍ التحميل...")}</span>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/[0.06]">
-                  {["المنتج", "الفئة", "السعر", "المخزون", "الحالة", "الإجراءات"].map((h) => (
+                  {[t("المنتج"), t("الفئة"), t("السعر"), t("المخزون"), t("الحالة"), t("الإجراءات")].map((h) => (
                     <th key={h} className="text-right text-white/35 font-medium text-xs pb-3 px-2">{h}</th>
                   ))}
                 </tr>
@@ -171,7 +196,7 @@ export default function Products() {
                       </td>
                       <td className="py-3 px-2">
                         <span className="text-white/50 text-xs px-2 py-0.5 rounded-full border border-white/10 bg-white/5">
-                          {categoryLabel[p.category] || p.category}
+                          {t(categoryLabel[p.category] || p.category)}
                         </span>
                       </td>
                       <td className="py-3 px-2 text-white font-bold text-xs" style={{ fontFamily: "'Orbitron', monospace" }}>
@@ -180,7 +205,7 @@ export default function Products() {
                       <td className="py-3 px-2 text-white/60 text-xs">{p.stock}</td>
                       <td className="py-3 px-2">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${stockStyles[status]}`}>
-                          {status}
+                          {t(status)}
                         </span>
                       </td>
                       <td className="py-3 px-2">
@@ -189,14 +214,14 @@ export default function Products() {
                             className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium flex items-center gap-1"
                             data-testid={`button-edit-${p.id}`}>
                             <Pencil size={12} />
-                            تعديل
+                            {t("تعديل")}
                           </button>
                           <span className="text-white/15">|</span>
                           <button onClick={() => handleDelete(p.id)} disabled={deleting === p.id}
                             className="text-xs text-red-400 hover:text-red-300 transition-colors font-medium flex items-center gap-1 disabled:opacity-50"
                             data-testid={`button-delete-${p.id}`}>
                             {deleting === p.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                            حذف
+                            {t("حذف")}
                           </button>
                         </div>
                       </td>
@@ -206,7 +231,7 @@ export default function Products() {
                 {filtered.length === 0 && !loading && (
                   <tr>
                     <td colSpan={6} className="py-10 text-center text-white/30 text-sm">
-                      {search ? "لا توجد نتائج للبحث" : "لا توجد منتجات — اضغط إضافة منتج للبدء"}
+                      {search ? t("لا توجد نتائج للبحث") : t("لا توجد منتجات — اضغط إضافة منتج للبدء")}
                     </td>
                   </tr>
                 )}

@@ -134,7 +134,10 @@ export default function AddProductModal({ open, onClose, onSave, editingProduct 
         badge: form.badge,
         imageUrl: form.imageUrl || imagePreview || "",
       };
+      
+      console.log("إرسال بيانات المنتج:", payload);
       await onSave(payload);
+      console.log("تم إرسال المنتج بنجاح");
       setStatus("success");
       setTimeout(() => {
         setStatus("idle");
@@ -145,6 +148,8 @@ export default function AddProductModal({ open, onClose, onSave, editingProduct 
     } catch (err: any) {
       setStatus("error");
       setErrorMsg(err.message || "حدث خطأ أثناء الحفظ");
+      console.error("خطأ في إرسال المنتج:", err);
+      alert("فشل إضافة المنتج: " + (err.message || "خطأ غير معروف"));
     }
   };
 

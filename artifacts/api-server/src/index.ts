@@ -1,14 +1,8 @@
 import app from "./app";
 import { logger } from "./lib/logger";
-import { autoSeed } from "./lib/autoSeed.js";
+import { autoSeed } from "./lib/productSeeder.js";
 
-const rawPort = process.env["PORT"];
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
+const rawPort = process.env.PORT || "5001";
 
 const port = Number(rawPort);
 

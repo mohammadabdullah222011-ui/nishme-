@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: nashmi-api
+    runtime: node
+    repo: https://github.com/your-username/nashmi-market
+    branch: main
+    rootDir: artifacts/api-server
+    buildCommand: pnpm install && node build.mjs
+    startCommand: node --enable-source-maps dist/index.mjs
+    healthCheckPath: /api/healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "5001"
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://nashmi-admin.vercel.app,https://nashmi-store.vercel.app

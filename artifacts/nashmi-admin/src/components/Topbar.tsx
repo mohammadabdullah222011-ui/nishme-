@@ -1,23 +1,76 @@
-import { useState } from "react";
-import { Bell, Search, ChevronDown, Check, ShieldAlert, AlertTriangle, Info, Zap, X } from "lucide-react";
-import { notifications } from "@/data/mockData";
+import { useState, useEffect, useCallback } from "react";
+import { Bell, Search, ChevronDown, ShieldAlert, AlertTriangle, Info, Check, X } from "lucide-react";
+import { useLocation } from "wouter";
+import { adminApi, type AdminNotification } from "@/lib/api";
+import { useLang } from "@/i18n/context";
 
 interface TopbarProps {
   sidebarCollapsed: boolean;
 }
 
 const notifIcons: Record<string, React.ReactNode> = {
+  new_order: <Info size={14} className="text-blue-400" />,
+  status_change: <ShieldAlert size={14} className="text-orange-400" />,
+  info: <Info size={14} className="text-blue-400" />,
   alert: <ShieldAlert size={14} className="text-red-400" />,
   warning: <AlertTriangle size={14} className="text-orange-400" />,
-  info: <Info size={14} className="text-blue-400" />,
   success: <Check size={14} className="text-green-400" />,
 };
 
+function formatNotifTime(iso: string, t: (key: string) => string) {
+  try {
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = Math.floor((now.getTime() - d.getTime()) / 1000);
+    if (diff < 60) return t("الآن");
+    if (diff < 3600) return t("منذ %d دقيقة").replace("%d", String(Math.floor(diff / 60)));
+    if (diff < 86400) return t("منذ %d ساعة").replace("%d", String(Math.floor(diff / 3600)));
+    return d.toLocaleDateString("ar-JO");
+  } catch {
+    return iso;
+  }
+}
+
 export default function Topbar({ sidebarCollapsed }: TopbarProps) {
+  const { t } = useLang();
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [serverStatus, setServerStatus] = useState(true);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
+  const [, setLocation] = useLocation();
+
+  const fetchNotifications = useCallback(async () => {
+    try {
+      const data = await adminApi.getNotifications();
+      setNotifications(data);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 8000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
+
   const unread = notifications.filter((n) => !n.read).length;
+
+  const handleMarkRead = async () => {
+    try {
+      await adminApi.markNotificationsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleNotifClick = (notif: AdminNotification) => {
+    setNotifOpen(false);
+    if (notif.orderId) {
+      setLocation("/orders");
+    }
+  };
 
   return (
     <header
@@ -29,8 +82,8 @@ export default function Topbar({ sidebarCollapsed }: TopbarProps) {
       {/* Left: Welcome */}
       <div className="flex items-center gap-4">
         <div>
-          <h2 className="text-white font-semibold text-sm leading-none">Welcome Back</h2>
-          <p className="text-white/40 text-xs mt-0.5">Hey, Admin!</p>
+          <h2 className="text-white font-semibold text-sm leading-none">{t("Welcome Back")}</h2>
+          <p className="text-white/40 text-xs mt-0.5">{t("Hey, Admin!")}</p>
         </div>
 
         {/* Server Status Toggle */}
@@ -46,7 +99,7 @@ export default function Topbar({ sidebarCollapsed }: TopbarProps) {
           <span
             className={`w-1.5 h-1.5 rounded-full ${serverStatus ? "bg-green-400" : "bg-red-400"} pulse-dot`}
           />
-          {serverStatus ? "Servers Online" : "Servers Down"}
+          {serverStatus ? t("Servers Online") : t("Servers Down")}
         </button>
       </div>
 
@@ -57,7 +110,7 @@ export default function Topbar({ sidebarCollapsed }: TopbarProps) {
           <Search size={14} className="absolute top-1/2 -translate-y-1/2 left-3 text-white/30" />
           <input
             type="search"
-            placeholder="Search..."
+            placeholder={t("Search...")}
             className="bg-white/5 border border-white/8 rounded-xl py-2 pl-8 pr-4 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/40 transition-colors w-48"
             data-testid="input-search"
           />
@@ -66,7 +119,7 @@ export default function Topbar({ sidebarCollapsed }: TopbarProps) {
         {/* Notifications */}
         <div className="relative">
           <button
-            onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
+            onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); if (!notifOpen) fetchNotifications(); }}
             className="relative p-2 rounded-xl border border-white/8 text-white/50 hover:text-white hover:border-white/15 hover:bg-white/5 transition-all duration-200"
             data-testid="button-notifications"
           >
@@ -76,7 +129,7 @@ export default function Topbar({ sidebarCollapsed }: TopbarProps) {
                 className="absolute -top-1 -right-1 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center text-white"
                 style={{ background: "#dc2626", boxShadow: "0 0 8px rgba(220,38,38,0.6)" }}
               >
-                {unread}
+                {unread > 9 ? "9+" : unread}
               </span>
             )}
           </button>
@@ -87,10 +140,13 @@ export default function Topbar({ sidebarCollapsed }: TopbarProps) {
               style={{ background: "rgba(12,12,12,0.98)", backdropFilter: "blur(20px)" }}
             >
               <div className="flex items-center justify-between px-4 py-3 border-b border-white/8">
-                <p className="text-white font-semibold text-sm">الإشعارات</p>
+                <p className="text-white font-semibold text-sm">{t("الإشعارات")}</p>
                 <div className="flex items-center gap-2">
                   {unread > 0 && (
-                    <span className="text-xs text-red-400 font-medium">{unread} جديد</span>
+                    <button onClick={handleMarkRead}
+                      className="text-xs text-red-400 hover:text-red-300 font-medium transition-colors">
+                      {t("تعيين الكل مقروء")}
+                    </button>
                   )}
                   <button onClick={() => setNotifOpen(false)} className="text-white/30 hover:text-white/60 transition-colors">
                     <X size={14} />
@@ -98,25 +154,29 @@ export default function Topbar({ sidebarCollapsed }: TopbarProps) {
                 </div>
               </div>
               <div className="max-h-72 overflow-y-auto">
-                {notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    className={`flex gap-3 px-4 py-3 border-b border-white/5 hover:bg-white/3 transition-colors ${!n.read ? "bg-white/[0.02]" : ""}`}
-                    data-testid={`notif-${n.id}`}
-                  >
-                    <div className="mt-0.5 flex-shrink-0">
-                      {notifIcons[n.type] || <Info size={14} />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-xs font-semibold">{n.title}</p>
-                      <p className="text-white/50 text-xs mt-0.5 leading-relaxed">{n.desc}</p>
-                      <p className="text-white/25 text-[10px] mt-1">{n.time}</p>
-                    </div>
-                    {!n.read && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
-                    )}
-                  </div>
-                ))}
+                {notifications.length === 0 ? (
+                  <div className="px-4 py-8 text-center text-white/30 text-sm">{t("لا توجد إشعارات")}</div>
+                ) : (
+                  notifications.map((n) => (
+                    <button
+                      key={n.id}
+                      onClick={() => handleNotifClick(n)}
+                      className={`w-full text-right flex gap-3 px-4 py-3 border-b border-white/5 hover:bg-white/3 transition-colors ${!n.read ? "bg-white/[0.02]" : ""}`}
+                    >
+                      <div className="mt-0.5 flex-shrink-0">
+                        {notifIcons[n.type] || <Info size={14} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-xs font-semibold">{n.title}</p>
+                        <p className="text-white/50 text-xs mt-0.5 leading-relaxed line-clamp-2">{n.desc}</p>
+                        <p className="text-white/25 text-[10px] mt-1">{formatNotifTime(n.createdAt, t)}</p>
+                      </div>
+                      {!n.read && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 flex-shrink-0" />
+                      )}
+                    </button>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -144,7 +204,7 @@ export default function Topbar({ sidebarCollapsed }: TopbarProps) {
               className="absolute left-0 top-12 w-44 rounded-xl border border-white/8 shadow-2xl z-50 overflow-hidden"
               style={{ background: "rgba(12,12,12,0.98)" }}
             >
-              {["الملف الشخصي", "الإعدادات", "تسجيل الخروج"].map((item) => (
+              {[t("الملف الشخصي"), t("الإعدادات"), t("تسجيل الخروج")].map((item) => (
                 <button
                   key={item}
                   className="w-full text-right px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"

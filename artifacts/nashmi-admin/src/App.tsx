@@ -3,6 +3,7 @@ import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { LanguageProvider } from "@/i18n/context";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
 import Dashboard from "@/pages/Dashboard";
@@ -10,6 +11,11 @@ import Analytics from "@/pages/Analytics";
 import Orders from "@/pages/Orders";
 import Products from "@/pages/Products";
 import Users from "@/pages/Users";
+import Reports from "@/pages/Reports";
+import Security from "@/pages/Security";
+import ServerPage from "@/pages/Server";
+import NotificationsPage from "@/pages/NotificationsPage";
+import SettingsPage from "@/pages/Settings";
 import { AdminAuthProvider } from "@/context/AdminAuthContext";
 import AdminLoginGate from "@/components/AdminLoginGate";
 
@@ -34,6 +40,11 @@ function AdminLayout() {
             <Route path="/orders" component={Orders} />
             <Route path="/products" component={Products} />
             <Route path="/users" component={Users} />
+            <Route path="/reports" component={Reports} />
+            <Route path="/security" component={Security} />
+            <Route path="/server" component={ServerPage} />
+            <Route path="/notifications" component={NotificationsPage} />
+            <Route path="/settings" component={SettingsPage} />
             <Route>
               <div className="flex items-center justify-center h-64">
                 <div className="text-center">
@@ -54,16 +65,18 @@ function AdminLayout() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AdminAuthProvider>
-          <AdminLoginGate>
-            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-              <AdminLayout />
-            </WouterRouter>
-          </AdminLoginGate>
-        </AdminAuthProvider>
-        <Toaster />
-      </TooltipProvider>
+      <LanguageProvider>
+        <TooltipProvider>
+          <AdminAuthProvider>
+            <AdminLoginGate>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <AdminLayout />
+              </WouterRouter>
+            </AdminLoginGate>
+          </AdminAuthProvider>
+          <Toaster />
+        </TooltipProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShoppingCart, X, Plus, Minus, Trash2, CheckCircle, LogIn, Loader2 } from "lucide-react";
+import { ShoppingCart, X, Plus, Minus, Trash2, CheckCircle, LogIn, Loader2, Phone, User, MapPin } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useCart } from "@/context/CartContext";
 import { useUser } from "@/context/UserContext";
@@ -17,13 +17,28 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
   const [checking, setChecking] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [customerName, setCustomerName] = useState(user?.name || "");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
 
   const handleCheckout = async () => {
     if (!user) return;
+    if (!customerName.trim()) {
+      setError("يرجى إدخال الاسم");
+      return;
+    }
+    if (!phone.trim()) {
+      setError("يرجى إدخال رقم الهاتف");
+      return;
+    }
+    if (!address.trim()) {
+      setError("يرجى إدخال العنوان");
+      return;
+    }
     setChecking(true);
     setError("");
     try {
-      await api.createOrder(items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })));
+      await api.createOrder(items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })), phone.trim(), customerName.trim(), address.trim());
       setSuccess(true);
       clearCart();
       setTimeout(() => { setSuccess(false); onClose(); }, 2500);
@@ -116,6 +131,30 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
 
             {error && (
               <p className="text-red-400 text-sm text-center py-1">{error}</p>
+            )}
+
+            {user && (
+              <div className="flex flex-col gap-3">
+                <div className="relative">
+                  <User size={15} className="absolute top-1/2 -translate-y-1/2 right-3 text-white/30" />
+                  <input type="text" required value={customerName} onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="الاسم الكامل *"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pr-9 pl-4 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors" />
+                </div>
+                <div className="relative">
+                  <Phone size={15} className="absolute top-1/2 -translate-y-1/2 right-3 text-white/30" />
+                  <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)}
+                    placeholder="رقم الهاتف *"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pr-9 pl-4 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors"
+                    dir="ltr" />
+                </div>
+                <div className="relative">
+                  <MapPin size={15} className="absolute top-1/2 -translate-y-1/2 right-3 text-white/30" />
+                  <input type="text" required value={address} onChange={(e) => setAddress(e.target.value)}
+                    placeholder="العنوان (المدينة، الحي، الشارع) *"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pr-9 pl-4 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors" />
+                </div>
+              </div>
             )}
 
             {user ? (
