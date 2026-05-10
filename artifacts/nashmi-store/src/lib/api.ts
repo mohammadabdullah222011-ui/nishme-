@@ -1,6 +1,4 @@
-const LOCAL_API = "http://localhost:5001/api";
-const RENDER_API = "https://nashmi-market.onrender.com/api";
-const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || (typeof location !== 'undefined' && (location.hostname === "localhost" || location.hostname === "127.0.0.1") ? LOCAL_API : RENDER_API);
+const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || "http://localhost:5001/api";
 
 function getToken(): string | null {
   return localStorage.getItem("nashmi_token");
