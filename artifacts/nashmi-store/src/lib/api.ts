@@ -1,4 +1,5 @@
-const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || "http://localhost:5001/api";
+const ADMIN_API = "https://nashmi-market-nashmi-admin.vercel.app/api";
+const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || ADMIN_API;
 
 function getToken(): string | null {
   return localStorage.getItem("nashmi_token");
