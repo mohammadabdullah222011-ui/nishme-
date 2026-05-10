@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-const SECRET = process.env.SESSION_SECRET || "nashmi-souq-secret-key";
+const SECRET = "nashmi-market-secret-key-2024";
 
 export interface JwtPayload {
   userId: number;

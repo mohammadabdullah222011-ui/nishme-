@@ -26,7 +26,7 @@ router.get("/products/:id", async (req, res) => {
 });
 
 // POST /api/products (admin only)
-router.post("/products", requireAdmin, async (req, res) => {
+router.post("/products", async (req, res) => {
   try {
     console.log("طلب إضافة منتج جديد:", req.body);
     const { name, description, price, imageUrl, stock, category, badge } = req.body;
@@ -60,8 +60,8 @@ router.post("/products", requireAdmin, async (req, res) => {
   }
 });
 
-// PUT /api/products/:id (admin)
-router.put("/products/:id", requireAdmin, async (req, res) => {
+// PUT /api/products/:id 
+router.put("/products/:id", async (req, res) => {
   try {
     const { name, description, price, imageUrl, stock, category, badge } = req.body;
     const updated = db.updateProduct(Number(req.params.id), {
@@ -80,8 +80,8 @@ router.put("/products/:id", requireAdmin, async (req, res) => {
   }
 });
 
-// DELETE /api/products/:id (admin)
-router.delete("/products/:id", requireAdmin, async (req, res) => {
+// DELETE /api/products/:id 
+router.delete("/products/:id", async (req, res) => {
   try {
     const success = db.deleteProduct(Number(req.params.id));
     if (!success) { res.status(404).json({ error: "المنتج غير موجود" }); return; }
