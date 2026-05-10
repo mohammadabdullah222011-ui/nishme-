@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { db } from "../lib/database.js";
-import { requireAdmin, requireAuth } from "../middlewares/auth.js";
 
 const router = Router();
 
