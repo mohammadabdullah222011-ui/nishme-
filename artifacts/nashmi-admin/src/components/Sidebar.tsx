@@ -43,9 +43,10 @@ const bottomItems: (NavItem & { badge?: boolean })[] = [
 interface SidebarProps {
   collapsed: boolean;
   onToggle: () => void;
+  noToggle?: boolean;
 }
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, noToggle }: SidebarProps) {
   const [location] = useLocation();
   const [notifCount, setNotifCount] = useState(0);
   const { t } = useLang();
@@ -161,19 +162,21 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       </nav>
 
       {/* Toggle button */}
-      <div className="p-2 border-t border-white/[0.06]">
-        <button
-          onClick={onToggle}
-          className={`w-full flex items-center justify-center py-2 rounded-xl text-white/30 hover:text-white/60 hover:bg-white/5 transition-all duration-200 ${collapsed ? "" : "gap-2 px-3"}`}
-          data-testid="button-sidebar-toggle"
-        >
-          <ChevronRight
-            size={16}
-            className={`transition-transform duration-300 ${collapsed ? "" : "rotate-180"}`}
-          />
-          {!collapsed && <span className="text-xs">طي القائمة</span>}
-        </button>
-      </div>
+      {!noToggle && (
+        <div className="p-2 border-t border-white/[0.06]">
+          <button
+            onClick={onToggle}
+            className={`w-full flex items-center justify-center py-2 rounded-xl text-white/30 hover:text-white/60 hover:bg-white/5 transition-all duration-200 ${collapsed ? "" : "gap-2 px-3"}`}
+            data-testid="button-sidebar-toggle"
+          >
+            <ChevronRight
+              size={16}
+              className={`transition-transform duration-300 ${collapsed ? "" : "rotate-180"}`}
+            />
+            {!collapsed && <span className="text-xs">طي القائمة</span>}
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

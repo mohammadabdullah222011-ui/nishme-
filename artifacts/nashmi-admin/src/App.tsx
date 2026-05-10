@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/i18n/context";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import Dashboard from "@/pages/Dashboard";
 import Analytics from "@/pages/Analytics";
 import Orders from "@/pages/Orders";
@@ -23,15 +25,25 @@ const queryClient = new QueryClient();
 
 function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   return (
     <div className="min-h-screen bg-background text-foreground" dir="rtl">
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
-      <Topbar sidebarCollapsed={collapsed} />
+      {isMobile ? (
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="right" className="p-0 w-[220px]" style={{ background: "rgba(9,9,9,0.97)" }}>
+            <Sidebar collapsed={false} onToggle={() => {}} noToggle />
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+      )}
+      <Topbar sidebarCollapsed={collapsed} onMenuToggle={isMobile ? () => setMobileOpen(true) : undefined} />
 
       <main
         className="transition-all duration-300 pt-16 min-h-screen"
-        style={{ marginRight: collapsed ? "68px" : "220px" }}
+        style={{ marginRight: isMobile ? 0 : (collapsed ? "68px" : "220px") }}
       >
         <div className="p-5">
           <Switch>

@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { Bell, Search, ChevronDown, ShieldAlert, AlertTriangle, Info, Check, X } from "lucide-react";
+import { Bell, Search, ChevronDown, ShieldAlert, AlertTriangle, Info, Check, X, Menu } from "lucide-react";
 import { useLocation } from "wouter";
 import { adminApi, type AdminNotification } from "@/lib/api";
 import { useLang } from "@/i18n/context";
 
 interface TopbarProps {
   sidebarCollapsed: boolean;
+  onMenuToggle?: () => void;
 }
 
 const notifIcons: Record<string, React.ReactNode> = {
@@ -31,7 +32,7 @@ function formatNotifTime(iso: string, t: (key: string) => string) {
   }
 }
 
-export default function Topbar({ sidebarCollapsed }: TopbarProps) {
+export default function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
   const { t } = useLang();
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -75,12 +76,20 @@ export default function Topbar({ sidebarCollapsed }: TopbarProps) {
   return (
     <header
       className={`fixed top-0 left-0 h-16 z-30 flex items-center justify-between px-5 border-b border-white/[0.06] transition-all duration-300 ${
-        sidebarCollapsed ? "right-[68px]" : "right-[220px]"
+        onMenuToggle ? "right-0" : (sidebarCollapsed ? "right-[68px]" : "right-[220px]")
       }`}
       style={{ background: "rgba(9,9,9,0.95)", backdropFilter: "blur(20px)" }}
     >
-      {/* Left: Welcome */}
+      {/* Left: Mobile menu + Welcome */}
       <div className="flex items-center gap-4">
+        {onMenuToggle && (
+          <button
+            onClick={onMenuToggle}
+            className="md:hidden p-2 rounded-xl border border-white/8 text-white/50 hover:text-white hover:bg-white/5 transition-all"
+          >
+            <Menu size={18} />
+          </button>
+        )}
         <div>
           <h2 className="text-white font-semibold text-sm leading-none">{t("Welcome Back")}</h2>
           <p className="text-white/40 text-xs mt-0.5">{t("Hey, Admin!")}</p>
