@@ -1,5 +1,4 @@
-const ADMIN_API = "https://nashmi-market-nashmi-admin.vercel.app/api";
-const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || ADMIN_API;
+const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || "https://nashmi-market.onrender.com/api";
 
 function getToken(): string | null {
   return localStorage.getItem("nashmi_token");
