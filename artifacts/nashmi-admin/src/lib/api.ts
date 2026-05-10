@@ -1,4 +1,4 @@
-const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || "https://nashmi-market.onrender.com/api";
+const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || "http://localhost:5001/api";
 
 function getToken(): string | null {
   return localStorage.getItem("nashmi_admin_token");
