@@ -46,6 +46,22 @@ app.get('/api/products/:id', (req, res) => {
   const p = products.find(x => x.id === Number(req.params.id));
   res.json(p || null);
 });
+app.post('/api/products', (req, res) => {
+  const { name, description, price, imageUrl, stock, category, badge } = req.body;
+  const product = { id: nextId.products++, name: name || "منتج", description: description || "", price: Number(price) || 0, imageUrl: imageUrl || "", stock: Number(stock) || 0, category: category || "", badge: badge || null, rating: 5, reviews: 0, createdAt: new Date().toISOString() };
+  products.push(product);
+  res.json(product);
+});
+app.put('/api/products/:id', (req, res) => {
+  const idx = products.findIndex(x => x.id === Number(req.params.id));
+  if (idx !== -1) { products[idx] = { ...products[idx], ...req.body }; res.json(products[idx]); }
+  else res.status(404).json({ error: "المنتج غير موجود" });
+});
+app.delete('/api/products/:id', (req, res) => {
+  const idx = products.findIndex(x => x.id === Number(req.params.id));
+  if (idx !== -1) { products.splice(idx, 1); res.json({ success: true }); }
+  else res.status(404).json({ error: "المنتج غير موجود" });
+});
 
 // Orders
 app.post('/api/orders', (req, res) => {

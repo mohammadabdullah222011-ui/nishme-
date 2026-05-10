@@ -34,13 +34,12 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
     return data as T;
   } catch (err) {
     console.warn("API Error (Mocking response since no database is running):", err);
-    if (path.includes("/products")) return [] as unknown as T;
-    if (path === "/orders") return [] as unknown as T;
-    if (path.startsWith("/orders/")) throw err;
+    if (method === "GET" && path.includes("/products")) return [] as unknown as T;
+    if (method === "GET" && (path === "/orders" || path.startsWith("/orders/"))) return [] as unknown as T;
     if (path.includes("/dashboard")) return { totalUsers: 5, totalOrders: 12, totalRevenue: 15300, totalProducts: 3, recentOrders: [] } as unknown as T;
     if (path.includes("/auth/me")) return { id: 1, name: "Admin", email: "admin@nashmi.com", role: "admin" } as unknown as T;
-    if (path.includes("/users")) return [] as unknown as T;
-    if (path.includes("/notifications")) return [] as unknown as T;
+    if (method === "GET" && path.includes("/users")) return [] as unknown as T;
+    if (method === "GET" && path.includes("/notifications")) return [] as unknown as T;
     throw err;
   }
 }
