@@ -2,7 +2,7 @@ services:
   - type: web
     name: nashmi-api
     runtime: node
-    repo: https://github.com/your-username/nashmi-market
+    repo: https://github.com/mohammadabdullah222011-ui/nashmi-market
     branch: main
     rootDir: artifacts/api-server
     buildCommand: pnpm install && node build.mjs
