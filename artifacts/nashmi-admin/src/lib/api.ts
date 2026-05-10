@@ -1,4 +1,6 @@
-const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || "https://nashmi-market.onrender.com/api";
+const LOCAL_API = "http://localhost:5001/api";
+const RENDER_API = "https://nashmi-market.onrender.com/api";
+const BASE = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_URL) || (typeof location !== 'undefined' && (location.hostname === "localhost" || location.hostname === "127.0.0.1") ? LOCAL_API : RENDER_API);
 
 function getToken(): string | null {
   return localStorage.getItem("nashmi_admin_token");
@@ -16,66 +18,49 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
       headers: { "Content-Type": "application/json", ...authHeaders() },
       body: body ? JSON.stringify(body) : undefined,
     });
-    
+
     const text = await res.text();
     if (!text) {
-      if (!res.ok) throw new Error("Action unavailable: No database connected.");
-      return {} as T;
+      throw new Error(!res.ok ? "Action unavailable" : "Action unavailable: Empty response");
     }
-    
-    let data;
+
+    let data: any;
     try {
       data = JSON.parse(text);
-    } catch(e) {
-      throw new Error("Action unavailable: No database connected.");
+    } catch {
+      throw new Error("Action unavailable: Invalid JSON response");
     }
-    
+
     if (!res.ok) throw new Error(data?.error || "حدث خطأ");
     return data as T;
-  } catch (err) {
-    console.warn("API Error (Mocking response since no database is running):", err);
-    if (method === "GET" && path.includes("/products")) return [] as unknown as T;
-    if (method === "GET" && (path === "/orders" || path.startsWith("/orders/"))) return [] as unknown as T;
-    if (path.includes("/dashboard")) return { totalUsers: 5, totalOrders: 12, totalRevenue: 15300, totalProducts: 3, recentOrders: [] } as unknown as T;
-    if (path.includes("/auth/me")) return { id: 1, name: "Admin", email: "admin@nashmi.com", role: "admin" } as unknown as T;
-    if (method === "GET" && path.includes("/users")) return [] as unknown as T;
-    if (method === "GET" && path.includes("/notifications")) return [] as unknown as T;
+  } catch (err: any) {
+    console.warn("API Error:", err);
     throw err;
   }
 }
 
 export const adminApi = {
   login: async (email: string, password: string) => {
-    try {
-      return await req<{ token: string; user: { id: number; name: string; email: string; role: string } }>(
-        "POST", "/auth/login", { email, password }
-      );
-    } catch {
-      if (email === "admin@nashmi.com" && (password === "password" || password === "admin123")) {
-        return { token: "mock-token", user: { id: 1, name: "Admin", email: "admin@nashmi.com", role: "admin" } };
-      }
-      throw new Error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-    }
+    return req<{ token: string; user: { id: number; name: string; email: string; role: string } }>(
+      "POST",
+      "/auth/login",
+      { email, password },
+    );
   },
 
   getProducts: () => req<AdminProduct[]>("GET", "/products"),
 
-  addProduct: (data: Partial<AdminProduct>) =>
-    req<AdminProduct>("POST", "/products", data),
+  addProduct: (data: Partial<AdminProduct>) => req<AdminProduct>("POST", "/products", data),
 
-  updateProduct: (id: number, data: Partial<AdminProduct>) =>
-    req<AdminProduct>("PUT", `/products/${id}`, data),
+  updateProduct: (id: number, data: Partial<AdminProduct>) => req<AdminProduct>("PUT", `/products/${id}`, data),
 
-  deleteProduct: (id: number) =>
-    req<{ success: boolean }>("DELETE", `/products/${id}`),
+  deleteProduct: (id: number) => req<{ success: boolean }>("DELETE", `/products/${id}`),
 
   getOrders: () => req<AdminOrder[]>("GET", "/orders"),
 
-  getOrderDetail: (id: number) =>
-    req<AdminOrder>("GET", `/orders/${id}`),
+  getOrderDetail: (id: number) => req<AdminOrder>("GET", `/orders/${id}`),
 
-  updateOrderStatus: (id: number, status: string) =>
-    req<AdminOrder>("PUT", `/orders/${id}/status`, { status }),
+  updateOrderStatus: (id: number, status: string) => req<AdminOrder>("PUT", `/orders/${id}/status`, { status }),
 
   createManualOrder: (customerName: string, total: number, status: string, items?: OrderItem[]) =>
     req<AdminOrder>("POST", "/orders/manual", { customerName, total, status, items }),
@@ -154,3 +139,4 @@ export interface DashboardData {
   totalProducts: number;
   recentOrders: AdminOrder[];
 }
+
