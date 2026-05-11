@@ -1,10 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Search, Filter, Download, RefreshCw, Loader2, ChevronDown, Plus, X, Eye, MapPin, Phone } from "lucide-react";
+import { Search, Filter, Download, RefreshCw, Loader2, ChevronDown, Plus, X, Eye } from "lucide-react";
 import { adminApi, type AdminOrder } from "@/lib/api";
 import OrderDetailModal from "@/components/OrderDetailModal";
 import { useToast } from "@/hooks/use-toast";
 import { useLang } from "@/i18n/context";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const statusKeyMap: Record<string, string> = {
   pending: "معلق",
@@ -132,7 +131,6 @@ function AddOrderModal({ onClose, onAdded, t }: { onClose: () => void; onAdded: 
 
 export default function Orders() {
   const { t } = useLang();
-  const isMobile = useIsMobile();
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -282,77 +280,6 @@ export default function Orders() {
           <div className="flex items-center justify-center py-12 gap-3">
             <Loader2 size={24} className="animate-spin text-red-500" />
             <span className="text-white/40 text-sm">{t("جارٍ تحميل الطلبات...")}</span>
-          </div>
-        ) : isMobile ? (
-          <div className="space-y-3">
-            {filtered.map((order) => {
-              const arStatus = t(statusKeyMap[order.status] || order.status);
-              return (
-                <div key={order.id} className="rounded-xl border border-white/[0.06] p-3 space-y-2"
-                  style={{ background: "rgba(255,255,255,0.02)" }}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-red-400 font-mono text-xs font-semibold">#{String(order.id).padStart(4, "0")}</span>
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusStyles[arStatus] || "text-white/50"}`}>
-                      {arStatus}
-                    </span>
-                  </div>
-                  <button onClick={() => setDetailOrder(order)} className="flex items-center gap-2 w-full">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                      style={{ background: "linear-gradient(135deg, rgba(220,38,38,0.3), rgba(220,38,38,0.1))" }}>
-                      {order.customerName?.[0] || "?"}
-                    </div>
-                    <span className="text-white/80 text-xs font-medium flex-1 text-right">{order.customerName}</span>
-                  </button>
-                  <div className="flex items-center justify-between">
-                    <span className="text-white/35 text-xs">{formatDate(order.createdAt, t)}</span>
-                    <span className="text-white font-bold text-xs" style={{ fontFamily: "'Orbitron', monospace" }}>
-                      {order.total.toLocaleString("en")} JD
-                    </span>
-                  </div>
-                  {order.address && (
-                    <div className="flex items-center gap-1.5 text-white/40 text-[10px]">
-                      <MapPin size={10} />
-                      <span className="truncate">{order.address}</span>
-                    </div>
-                  )}
-                  {order.phone && (
-                    <div className="flex items-center gap-1.5 text-white/40 text-[10px]">
-                      <Phone size={10} />
-                      <span dir="ltr">{order.phone}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 pt-1">
-                    <div className="relative flex-1">
-                      {updatingId === order.id ? (
-                        <Loader2 size={14} className="animate-spin text-red-400 mx-auto" />
-                      ) : (
-                        <div className="relative inline-block w-full">
-                          <select
-                            value={arStatus}
-                            onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                            className="appearance-none bg-white/5 border border-white/10 rounded-lg px-2 py-1.5 text-xs text-white/70 w-full focus:outline-none focus:border-red-500/40 cursor-pointer"
-                            style={{ background: "rgba(255,255,255,0.05)" }}>
-                            {[t("معلق"), t("قيد الشحن"), t("مكتمل"), t("ملغي")].map((s) => (
-                              <option key={s} value={s} style={{ background: "#111" }}>{s}</option>
-                            ))}
-                          </select>
-                          <ChevronDown size={10} className="absolute top-1/2 -translate-y-1/2 left-2 text-white/30 pointer-events-none" />
-                        </div>
-                      )}
-                    </div>
-                    <button onClick={() => setDetailOrder(order)}
-                      className="p-2 rounded-lg border border-white/10 text-white/40 hover:text-white transition-all flex items-center gap-1 text-xs">
-                      <Eye size={14} />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-            {filtered.length === 0 && (
-              <div className="py-10 text-center text-white/30 text-sm">
-                {search ? t("لا توجد نتائج") : t("لا توجد طلبات حتى الآن")}
-              </div>
-            )}
           </div>
         ) : (
           <div className="overflow-x-auto">

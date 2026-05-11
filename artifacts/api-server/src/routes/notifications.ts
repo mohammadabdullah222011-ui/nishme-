@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { db } from "../lib/database.js";
-import { requireAdmin } from "../middlewares/auth.js";
 
 const router = Router();
 
-router.get("/notifications", requireAdmin, async (_req, res) => {
+// GET /api/notifications
+router.get("/notifications", async (_req, res) => {
   try {
     const notifications = db.getNotifications();
     res.json(notifications);
@@ -13,7 +13,8 @@ router.get("/notifications", requireAdmin, async (_req, res) => {
   }
 });
 
-router.get("/notifications/unread-count", requireAdmin, async (_req, res) => {
+// GET /api/notifications/unread-count
+router.get("/notifications/unread-count", async (_req, res) => {
   try {
     const count = db.getUnreadCount();
     res.json({ count });
@@ -22,7 +23,8 @@ router.get("/notifications/unread-count", requireAdmin, async (_req, res) => {
   }
 });
 
-router.post("/notifications/read", requireAdmin, async (_req, res) => {
+// POST /api/notifications/read
+router.post("/notifications/read", async (_req, res) => {
   try {
     db.markNotificationsRead();
     res.json({ success: true });
