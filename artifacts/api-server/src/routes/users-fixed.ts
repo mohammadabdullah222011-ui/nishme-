@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { db } from "../lib/database.js";
+import { requireAdmin } from "../middlewares/auth.js";
 
 const router = Router();
 
-// GET /api/users (admin only)
-router.get("/users", async (_req, res) => {
+router.get("/users", requireAdmin, async (_req, res) => {
   try {
     const users = db.getUsers();
     res.json(users);
@@ -14,8 +14,7 @@ router.get("/users", async (_req, res) => {
   }
 });
 
-// PUT /api/users/:id/role (admin only)
-router.put("/users/:id/role", async (req, res) => {
+router.put("/users/:id/role", requireAdmin, async (req, res) => {
   try {
     const { role } = req.body as { role: string };
     if (!["admin", "user"].includes(role)) {
