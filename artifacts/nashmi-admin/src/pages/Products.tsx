@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, Plus, Filter, Trash2, Loader2, RefreshCw, Pencil } from "lucide-react";
+import { Search, Plus, Filter, Trash2, Loader2, RefreshCw, Pencil, Package } from "lucide-react";
 import AddProductModal, { type ProductFormData } from "@/components/AddProductModal";
 import { adminApi, type AdminProduct } from "@/lib/api";
 import { useLang } from "@/i18n/context";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const categoryLabel: Record<string, string> = {
   pc: "كمبيوتر",
@@ -25,6 +26,7 @@ const stockStyles: Record<string, string> = {
 
 export default function Products() {
   const { t } = useLang();
+  const isMobile = useIsMobile();
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -160,6 +162,62 @@ export default function Products() {
           <div className="flex items-center justify-center py-12 gap-3">
             <Loader2 size={24} className="animate-spin text-red-500" />
             <span className="text-white/40 text-sm">{t("جارٍ التحميل...")}</span>
+          </div>
+        ) : isMobile ? (
+          <div className="space-y-3">
+            {filtered.map((p) => {
+              const status = stockStatus(p.stock);
+              return (
+                <div key={p.id} className="rounded-xl border border-white/[0.06] p-3 space-y-2"
+                  style={{ background: "rgba(255,255,255,0.02)" }}>
+                  <div className="flex items-center gap-3">
+                    {p.imageUrl ? (
+                      <img src={p.imageUrl} alt={p.name} className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-white/10" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                        style={{ background: "linear-gradient(135deg, rgba(220,38,38,0.3), rgba(220,38,38,0.1))" }}>
+                        <Package size={18} />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white/85 font-medium text-sm truncate">{p.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-white/50 text-[10px] px-2 py-0.5 rounded-full border border-white/10 bg-white/5">
+                          {t(categoryLabel[p.category] || p.category)}
+                        </span>
+                        {p.badge && <span className="text-[10px] text-red-400/70">{p.badge}</span>}
+                      </div>
+                    </div>
+                    <span className="text-white font-bold text-xs" style={{ fontFamily: "'Orbitron', monospace" }}>
+                      {p.price.toLocaleString("en")} JD
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${stockStyles[status]}`}>
+                      {t(status)} ({p.stock})
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => openEdit(p)}
+                        className="text-xs text-blue-400 hover:text-blue-300 transition-colors font-medium flex items-center gap-1 px-2 py-1 rounded-lg border border-white/10">
+                        <Pencil size={11} />
+                        {t("تعديل")}
+                      </button>
+                      <button onClick={() => handleDelete(p.id)} disabled={deleting === p.id}
+                        className="text-xs text-red-400 hover:text-red-300 transition-colors font-medium flex items-center gap-1 px-2 py-1 rounded-lg border border-white/10 disabled:opacity-50">
+                        {deleting === p.id ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
+                        {t("حذف")}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {filtered.length === 0 && (
+              <div className="py-10 text-center text-white/30 text-sm">
+                <Package size={28} className="mx-auto text-white/10 mb-2" />
+                {search ? t("لا توجد نتائج للبحث") : t("لا توجد منتجات — اضغط إضافة منتج للبدء")}
+              </div>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">

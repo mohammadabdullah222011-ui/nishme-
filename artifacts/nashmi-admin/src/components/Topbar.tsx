@@ -36,6 +36,7 @@ export default function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) 
   const { t } = useLang();
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileSearch, setMobileSearch] = useState(false);
   const [serverStatus, setServerStatus] = useState(true);
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [, setLocation] = useLocation();
@@ -75,13 +76,13 @@ export default function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) 
 
   return (
     <header
-      className={`fixed top-0 left-0 h-16 z-30 flex items-center justify-between px-5 border-b border-white/[0.06] transition-all duration-300 ${
-        onMenuToggle ? "right-0" : (sidebarCollapsed ? "right-[68px]" : "right-[220px]")
-      }`}
+      className={`fixed top-0 left-0 h-16 z-30 flex items-center justify-between px-3 md:px-5 border-b border-white/[0.06] transition-all duration-300 ${
+        onMenuToggle ? "right-0" : "md:right-[220px]"
+      } ${sidebarCollapsed ? "md:!right-[68px]" : ""}`}
       style={{ background: "rgba(9,9,9,0.95)", backdropFilter: "blur(20px)" }}
     >
       {/* Left: Mobile menu + Welcome */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4 min-w-0">
         {onMenuToggle && (
           <button
             onClick={onMenuToggle}
@@ -90,15 +91,15 @@ export default function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) 
             <Menu size={18} />
           </button>
         )}
-        <div>
-          <h2 className="text-white font-semibold text-sm leading-none">{t("Welcome Back")}</h2>
+        <div className="min-w-0">
+          <h2 className="text-white font-semibold text-sm leading-none truncate">{t("Welcome Back")}</h2>
           <p className="text-white/40 text-xs mt-0.5">{t("Hey, Admin!")}</p>
         </div>
 
         {/* Server Status Toggle */}
         <button
           onClick={() => setServerStatus(!serverStatus)}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-300 ${
+          className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-300 ${
             serverStatus
               ? "border-green-500/30 text-green-400 bg-green-500/10"
               : "border-red-500/30 text-red-400 bg-red-500/10"
@@ -113,14 +114,37 @@ export default function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) 
       </div>
 
       {/* Right: Search + Notif + Profile */}
-      <div className="flex items-center gap-3">
-        {/* Search */}
+      <div className="flex items-center gap-1 md:gap-3">
+        {/* Search - Mobile toggle */}
+        <div className="md:hidden">
+          <button
+            onClick={() => setMobileSearch(!mobileSearch)}
+            className="p-2 rounded-xl border border-white/8 text-white/50 hover:text-white hover:bg-white/5 transition-all"
+          >
+            <Search size={17} />
+          </button>
+          {mobileSearch && (
+            <div className="fixed left-0 right-0 top-16 z-50 p-3 border-b border-white/[0.06]"
+              style={{ background: "rgba(9,9,9,0.98)", backdropFilter: "blur(20px)" }}>
+              <div className="relative">
+                <Search size={14} className="absolute top-1/2 -translate-y-1/2 left-3 text-white/30" />
+                <input
+                  type="search" placeholder={t("Search...")} autoFocus
+                  className="w-full bg-white/5 border border-white/8 rounded-xl py-2.5 pl-8 pr-4 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/40 transition-colors"
+                  onBlur={() => setMobileSearch(false)}
+                  data-testid="input-search-mobile"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Search - Desktop */}
         <div className="relative hidden md:block">
           <Search size={14} className="absolute top-1/2 -translate-y-1/2 left-3 text-white/30" />
           <input
             type="search"
             placeholder={t("Search...")}
-            className="bg-white/5 border border-white/8 rounded-xl py-2 pl-8 pr-4 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/40 transition-colors w-48"
+            className="bg-white/5 border border-white/8 rounded-xl py-2 pl-8 pr-4 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/40 transition-colors w-36 xl:w-48"
             data-testid="input-search"
           />
         </div>

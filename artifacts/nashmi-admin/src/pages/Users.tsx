@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, Shield, ShieldOff, UserCheck, Loader2, RefreshCw, Users as UsersIcon } from "lucide-react";
+import { Search, Shield, ShieldOff, UserCheck, Loader2, RefreshCw, Users as UsersIcon, Mail, ShoppingBag, Wallet } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/api";
 import { useLang } from "@/i18n/context";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 function joinedDate(iso: string) {
   try {
@@ -11,6 +12,7 @@ function joinedDate(iso: string) {
 
 export default function Users() {
   const { t } = useLang();
+  const isMobile = useIsMobile();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -124,6 +126,76 @@ export default function Users() {
           <div className="flex items-center justify-center py-12 gap-3">
             <Loader2 size={24} className="animate-spin text-red-500" />
             <span className="text-white/40 text-sm">{t("جارٍ تحميل المستخدمين...")}</span>
+          </div>
+        ) : isMobile ? (
+          <div className="space-y-3">
+            {filtered.map((user) => (
+              <div key={user.id} className="rounded-xl border border-white/[0.06] p-3 space-y-2"
+                style={{ background: "rgba(255,255,255,0.02)" }}>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 relative"
+                    style={{ background: "linear-gradient(135deg, #dc2626, #7f1d1d)" }}>
+                    {user.name?.[0] || "?"}
+                    {user.role === "admin" && (
+                      <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center"
+                        style={{ background: "#dc2626", boxShadow: "0 0 6px rgba(220,38,38,0.8)" }}>
+                        <Shield size={8} className="text-white" />
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white/80 font-medium text-sm">{user.name}</p>
+                    <p className="text-white/40 text-xs truncate" dir="ltr">{user.email}</p>
+                  </div>
+                  {user.role === "admin" ? (
+                    <span className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border text-red-400 bg-red-400/10 border-red-400/25">
+                      <Shield size={10} />{t("مدير")}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full border text-blue-300 bg-blue-400/8 border-blue-400/20">
+                      <UserCheck size={10} />{t("عميل")}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1 text-white/50">
+                    <ShoppingBag size={11} /> {user.orderCount} {t("طلبات")}
+                  </span>
+                  <span className="flex items-center gap-1 text-white font-bold" style={{ fontFamily: "'Orbitron', monospace" }}>
+                    <Wallet size={11} className="text-white/50" /> {user.totalSpent.toLocaleString("en")} JD
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white/35 text-[10px]">{joinedDate(user.createdAt)}</span>
+                  {updatingId === user.id ? (
+                    <Loader2 size={14} className="animate-spin text-red-400" />
+                  ) : confirmId === user.id ? (
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={() => toggleRole(user)}
+                        className="text-[10px] px-2 py-0.5 rounded-lg font-bold text-white transition-all"
+                        style={{ background: user.role === "admin" ? "rgba(59,130,246,0.3)" : "rgba(220,38,38,0.3)" }}>
+                        {t("تأكيد")}
+                      </button>
+                      <button onClick={() => setConfirmId(null)}
+                        className="text-[10px] px-2 py-0.5 rounded-lg text-white/40 hover:text-white/60 border border-white/10 transition-all">
+                        {t("إلغاء")}
+                      </button>
+                    </div>
+                  ) : (
+                    <button onClick={() => setConfirmId(user.id)}
+                      className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg font-semibold border transition-all duration-200 ${user.role === "admin" ? "text-blue-400 border-blue-400/20 hover:bg-blue-400/10" : "text-red-400 border-red-400/20 hover:bg-red-400/10"}`}>
+                      {user.role === "admin" ? <><ShieldOff size={11} />{t("إزالة المدير")}</> : <><Shield size={11} />{t("ترقية لمدير")}</>}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <div className="py-10 text-center">
+                <UsersIcon size={28} className="mx-auto text-white/10 mb-2" />
+                <p className="text-white/30 text-sm">{search ? t("لا توجد نتائج") : t("لا يوجد مستخدمون بعد")}</p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">

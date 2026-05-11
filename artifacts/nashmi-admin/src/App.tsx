@@ -42,8 +42,7 @@ function AdminLayout() {
       <Topbar sidebarCollapsed={collapsed} onMenuToggle={isMobile ? () => setMobileOpen(true) : undefined} />
 
       <main
-        className="transition-all duration-300 pt-16 min-h-screen"
-        style={{ marginRight: isMobile ? 0 : (collapsed ? "68px" : "220px") }}
+        className={`transition-all duration-300 pt-16 min-h-screen ${isMobile ? "" : collapsed ? "md:mr-[68px]" : "md:mr-[220px]"}`}
       >
         <div className="p-5">
           <Switch>
