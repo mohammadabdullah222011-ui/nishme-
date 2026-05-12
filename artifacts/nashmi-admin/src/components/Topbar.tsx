@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { Bell, Search, ChevronDown, ShieldAlert, AlertTriangle, Info, Check, X, Menu } from "lucide-react";
+import { Bell, Search, ChevronDown, ShieldAlert, AlertTriangle, Info, Check, X, Menu, LogOut } from "lucide-react";
 import { useLocation } from "wouter";
 import { adminApi, type AdminNotification } from "@/lib/api";
+import { useAdminAuth } from "@/context/AdminAuthContext";
 import { useLang } from "@/i18n/context";
 
 interface TopbarProps {
@@ -34,6 +35,7 @@ function formatNotifTime(iso: string, t: (key: string) => string) {
 
 export default function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) {
   const { t } = useLang();
+  const { logout } = useAdminAuth();
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [serverStatus, setServerStatus] = useState(true);
@@ -213,15 +215,19 @@ export default function Topbar({ sidebarCollapsed, onMenuToggle }: TopbarProps) 
               className="absolute left-0 top-12 w-44 rounded-xl border border-white/8 shadow-2xl z-50 overflow-hidden"
               style={{ background: "rgba(12,12,12,0.98)" }}
             >
-              {[t("الملف الشخصي"), t("الإعدادات"), t("تسجيل الخروج")].map((item) => (
-                <button
-                  key={item}
-                  className="w-full text-right px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
-                  onClick={() => setProfileOpen(false)}
-                >
-                  {item}
-                </button>
-              ))}
+              <button
+                className="w-full text-right px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 transition-colors border-b border-white/5"
+                onClick={() => { setLocation("/settings"); setProfileOpen(false); }}
+              >
+                {t("الإعدادات")}
+              </button>
+              <button
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                onClick={() => { logout(); setProfileOpen(false); }}
+              >
+                <LogOut size={15} />
+                {t("تسجيل الخروج")}
+              </button>
             </div>
           )}
         </div>

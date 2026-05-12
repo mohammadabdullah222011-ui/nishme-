@@ -1,16 +1,17 @@
-import { useState } from "react";
-import { Settings as SettingsIcon, Save, Globe, Bell, Shield, Palette, RefreshCw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Settings as SettingsIcon, Save, Globe, Bell, Shield, Palette, RefreshCw, Instagram, Facebook } from "lucide-react";
 import { useLang } from "@/i18n/context";
+import { adminApi, type AdminSettings } from "@/lib/api";
 
 const SETTINGS_KEY = "nashmi_admin_settings";
 
-interface AdminSettings {
+interface LocalSettings {
   notifications: boolean;
   twoFactor: boolean;
   darkMode: boolean;
 }
 
-function loadSettings(): AdminSettings {
+function loadLocalSettings(): LocalSettings {
   try {
     return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") || { notifications: true, twoFactor: false, darkMode: true };
   } catch {
@@ -20,19 +21,32 @@ function loadSettings(): AdminSettings {
 
 export default function SettingsPage() {
   const { t, lang, setLang } = useLang();
-  const [settings, setSettings] = useState<AdminSettings>(loadSettings);
+  const [local, setLocal] = useState<LocalSettings>(loadLocalSettings);
   const [saved, setSaved] = useState(false);
+  const [social, setSocial] = useState({ instagram: "", facebook: "" });
+  const [loading, setLoading] = useState(true);
 
-  const toggle = (key: keyof AdminSettings) => {
-    const next = { ...settings, [key]: !settings[key] };
-    setSettings(next);
+  useEffect(() => {
+    adminApi.getSettings().then(s => {
+      setSocial({ instagram: s.instagram || "", facebook: s.facebook || "" });
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const toggle = (key: keyof LocalSettings) => {
+    const next = { ...local, [key]: !local[key] };
+    setLocal(next);
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
   };
 
-  const handleSave = () => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    try {
+      await adminApi.updateSettings({ instagram: social.instagram, facebook: social.facebook });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      alert("فشل حفظ الإعدادات");
+    }
   };
 
   return (
@@ -55,9 +69,9 @@ export default function SettingsPage() {
       <div className="space-y-4">
         {[
           { icon: Globe, label: t("اللغة"), desc: t("Arabic (الأردن)"), type: "select", value: lang, onChange: (v: string) => setLang(v as "ar" | "en"), options: [{ label: t("العربية"), value: "ar" }, { label: t("English"), value: "en" }] },
-          { icon: Bell, label: t("الإشعارات"), desc: t("إشعارات الطلبات الجديدة"), type: "toggle", value: settings.notifications, onChange: () => toggle("notifications") },
-          { icon: Shield, label: t("المصادقة"), desc: t("مصادقة ثنائية (2FA)"), type: "toggle", value: settings.twoFactor, onChange: () => toggle("twoFactor") },
-          { icon: Palette, label: t("المظهر"), desc: t("داكن - الوضع الليلي"), type: "toggle", value: settings.darkMode, onChange: () => toggle("darkMode") },
+          { icon: Bell, label: t("الإشعارات"), desc: t("إشعارات الطلبات الجديدة"), type: "toggle", value: local.notifications, onChange: () => toggle("notifications") },
+          { icon: Shield, label: t("المصادقة"), desc: t("مصادقة ثنائية (2FA)"), type: "toggle", value: local.twoFactor, onChange: () => toggle("twoFactor") },
+          { icon: Palette, label: t("المظهر"), desc: t("داكن - الوضع الليلي"), type: "toggle", value: local.darkMode, onChange: () => toggle("darkMode") },
         ].map((s: any) => (
           <div key={s.label} className="stat-card p-5 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -83,6 +97,26 @@ export default function SettingsPage() {
             )}
           </div>
         ))}
+
+        <div className="stat-card p-5">
+          <h3 className="text-white font-semibold text-sm mb-4">{t("روابط التواصل الاجتماعي")}</h3>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Instagram size={18} className="text-pink-400 shrink-0" />
+              <input type="text" placeholder="رابط Instagram"
+                value={social.instagram} disabled={loading}
+                onChange={(e) => setSocial(p => ({ ...p, instagram: e.target.value }))}
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50" />
+            </div>
+            <div className="flex items-center gap-3">
+              <Facebook size={18} className="text-blue-400 shrink-0" />
+              <input type="text" placeholder="رابط Facebook"
+                value={social.facebook} disabled={loading}
+                onChange={(e) => setSocial(p => ({ ...p, facebook: e.target.value }))}
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-red-500/50" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -60,6 +60,9 @@ export const api = {
 
   myOrders: () => req<ApiOrder[]>("GET", "/orders/my"),
 
+  // Settings
+  getSettings: () => req<ApiSettings>("GET", "/settings"),
+
   // Admin
   adminOrders: () => req<ApiOrder[]>("GET", "/orders"),
   dashboard: () => req<DashboardData>("GET", "/dashboard"),
@@ -95,6 +98,17 @@ export interface ApiOrder {
   phone: string;
   address: string;
   createdAt: string;
+}
+
+export interface ApiSettings {
+  id: number;
+  instagram: string;
+  facebook: string;
+  storeName: string;
+  storePhone: string;
+  storeEmail: string;
+  storeAddress: string;
+  updatedAt: string;
 }
 
 export interface DashboardData {

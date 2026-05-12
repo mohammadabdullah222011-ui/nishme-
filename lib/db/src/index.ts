@@ -1,39 +1,26 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import pg from "pg";
+import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import path from "path";
+import fs from "fs";
 import * as schema from "./schema";
 
-// For now, use a simple in-memory setup to get the admin panel working
-console.log("🗄️ Using mock database setup for development");
-
-// Mock database connection
-export const db = {
-  select: (columns?: any) => ({
-    from: (table: any) => ({
-      where: (condition: any) => Promise.resolve([]),
-      limit: (limit?: number) => Promise.resolve([]),
-      orderBy: (order: any) => ({
-        limit: (limit?: number) => Promise.resolve([])
-      })
-    })
-  }),
-  insert: () => ({ values: () => ({ returning: () => Promise.resolve([]) }) }),
-  update: () => ({ set: () => ({ where: () => ({ returning: () => Promise.resolve([]) }) }) }),
-  delete: () => ({ where: () => Promise.resolve([]) }),
-  query: {
-    users: { findMany: () => Promise.resolve([]) },
-    products: { findMany: () => Promise.resolve([]) },
-    orders: { findMany: () => Promise.resolve([]) },
+function getDbPath(): string {
+  const envUrl = process.env.DATABASE_URL;
+  if (envUrl?.startsWith("file:")) {
+    return envUrl.slice("file:".length);
   }
-} as any;
+  const dbDir = path.resolve(import.meta.dirname, "../../../.local/db");
+  fs.mkdirSync(dbDir, { recursive: true });
+  return path.join(dbDir, "nashmi-market.db");
+}
 
-// Mock table exports for dashboard
-export const usersTable = { name: 'users' };
-export const ordersTable = { name: 'orders', total: 'total', createdAt: 'createdAt' };
-export const productsTable = { name: 'products' };
+const dbPath = getDbPath();
 
-// Mock drizzle functions
-export const count = () => ({ name: 'count' });
-export const sum = (column: any) => ({ name: 'sum', column });
-export const desc = (column: any) => ({ name: 'desc', column });
+const sqlite = new Database(dbPath);
+sqlite.pragma("journal_mode = WAL");
+sqlite.pragma("foreign_keys = ON");
 
+const db = drizzle(sqlite, { schema });
+
+export { db };
 export * from "./schema";

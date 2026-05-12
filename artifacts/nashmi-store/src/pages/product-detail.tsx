@@ -1,12 +1,13 @@
 import { useParams, Link } from "wouter";
 import { ShoppingCart, Star, ArrowRight, CheckCircle } from "lucide-react";
 import { useState } from "react";
-import { products } from "@/data/products";
 import { useCart } from "@/context/CartContext";
 import ProductCard from "@/components/ProductCard";
+import { useProducts } from "@/hooks/useProducts";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const { products } = useProducts();
   const product = products.find((p) => p.id === Number(id));
   const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);

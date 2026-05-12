@@ -6,7 +6,7 @@ const router = Router();
 // GET /api/products
 router.get("/products", async (req, res) => {
   try {
-    const products = db.getProducts();
+    const products = await db.getProducts();
     res.json(products);
   } catch {
     res.status(500).json({ error: "خطأ في الخادم" });
@@ -16,7 +16,7 @@ router.get("/products", async (req, res) => {
 // GET /api/products/:id
 router.get("/products/:id", async (req, res) => {
   try {
-    const product = db.getProductById(Number(req.params.id));
+    const product = await db.getProductById(Number(req.params.id));
     if (!product) { res.status(404).json({ error: "المنتج غير موجود" }); return; }
     res.json(product);
   } catch {
@@ -47,7 +47,7 @@ router.post("/products", async (req, res) => {
     };
     
     console.log("البيانات التي سيتم حفظها:", productData);
-    const product = db.createProduct(productData);
+    const product = await db.createProduct(productData);
     console.log("المنتج تم حفظه في قاعدة البيانات:", product);
     
     console.log("إرسال استجابة بالمنتج المضاف:", product);
@@ -63,7 +63,7 @@ router.post("/products", async (req, res) => {
 router.put("/products/:id", async (req, res) => {
   try {
     const { name, description, price, imageUrl, stock, category, badge } = req.body;
-    const updated = db.updateProduct(Number(req.params.id), {
+    const updated = await db.updateProduct(Number(req.params.id), {
       name,
       description,
       price: Number(price),
@@ -82,7 +82,7 @@ router.put("/products/:id", async (req, res) => {
 // DELETE /api/products/:id 
 router.delete("/products/:id", async (req, res) => {
   try {
-    const success = db.deleteProduct(Number(req.params.id));
+    const success = await db.deleteProduct(Number(req.params.id));
     if (!success) { res.status(404).json({ error: "المنتج غير موجود" }); return; }
     res.json({ success: true });
   } catch {

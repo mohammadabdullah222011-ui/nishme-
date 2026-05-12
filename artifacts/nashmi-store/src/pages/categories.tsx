@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Monitor, Gamepad2, Headphones, Disc, ChevronLeft } from "lucide-react";
-import { products } from "@/data/products";
+import { useProducts } from "@/hooks/useProducts";
 
 const categoriesList = [
   {
@@ -42,6 +42,7 @@ const categoriesList = [
 ];
 
 export default function CategoriesPage() {
+  const { products } = useProducts();
   const getCount = (catId: string) =>
     products.filter((p) => p.category === catId).length;
 
@@ -142,7 +143,7 @@ export default function CategoriesPage() {
             عرض جميع المنتجات
           </h3>
           <p className="text-white/40 mb-6">
-            {products.length}+ منتج متاح بانتظارك
+            {products.length}+ منتجات متاحة بانتظارك
           </p>
           <Link href="/products">
             <button

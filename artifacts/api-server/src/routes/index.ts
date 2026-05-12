@@ -6,6 +6,7 @@ import ordersRouter from "./orders.js";
 import dashboardRouter from "./dashboard.js";
 import usersRouter from "./users-fixed.js";
 import notificationsRouter from "./notifications.js";
+import settingsRouter from "./settings.js";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(ordersRouter);
 router.use(dashboardRouter);
 router.use(usersRouter);
 router.use(notificationsRouter);
+router.use(settingsRouter);
 
 export default router;

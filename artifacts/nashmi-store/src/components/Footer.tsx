@@ -1,6 +1,40 @@
 import { Link } from "wouter";
 import { Gamepad2, Mail, Phone, MapPin } from "lucide-react";
-import { SiX, SiInstagram, SiDiscord, SiYoutube } from "react-icons/si";
+import { SiInstagram, SiFacebook } from "react-icons/si";
+import { useState, useEffect } from "react";
+
+const DEFAULT_SOCIAL = {
+  instagram: "#",
+  facebook: "#",
+};
+
+function SocialLinks() {
+  const [social, setSocial] = useState(DEFAULT_SOCIAL);
+
+  useEffect(() => {
+    const apiUrl = (typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_URL : undefined) || "https://nashmi-market.onrender.com/api";
+    fetch(`${apiUrl}/settings`)
+      .then(r => r.json())
+      .then(data => {
+        if (data?.instagram) setSocial(prev => ({ ...prev, instagram: data.instagram }));
+        if (data?.facebook) setSocial(prev => ({ ...prev, facebook: data.facebook }));
+      })
+      .catch(() => {});
+  }, []);
+
+  return (
+    <div className="flex items-center gap-3">
+      <a href={social.instagram} target="_blank" rel="noopener noreferrer" aria-label="إنستغرام"
+        className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-white/50 hover:text-red-400 hover:border-red-500/40 hover:bg-red-600/10 transition-all duration-200">
+        <SiInstagram size={17} />
+      </a>
+      <a href={social.facebook} target="_blank" rel="noopener noreferrer" aria-label="فيسبوك"
+        className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-white/50 hover:text-red-400 hover:border-red-500/40 hover:bg-red-600/10 transition-all duration-200">
+        <SiFacebook size={17} />
+      </a>
+    </div>
+  );
+}
 
 export default function Footer() {
   return (
@@ -27,26 +61,10 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-white/50 text-sm leading-relaxed max-w-xs mb-6">
-              وجهتك الأولى للألعاب والإكسسوارات في المملكة العربية السعودية. جودة لا تُضاهى، أسعار تُرضيك.
+              وجهتك الأولى للألعاب والإكسسوارات في الأردن. جودة لا تُضاهى، أسعار تُرضيك.
             </p>
-            {/* Social */}
-            <div className="flex items-center gap-3">
-              {[
-                { Icon: SiX, href: "#", label: "إكس" },
-                { Icon: SiInstagram, href: "#", label: "إنستغرام" },
-                { Icon: SiDiscord, href: "#", label: "ديسكورد" },
-                { Icon: SiYoutube, href: "#", label: "يوتيوب" },
-              ].map(({ Icon, href, label }) => (
-                <a
-                  key={label}
-                  href={href}
-                  aria-label={label}
-                  className="w-10 h-10 rounded-xl border border-white/10 flex items-center justify-center text-white/50 hover:text-red-400 hover:border-red-500/40 hover:bg-red-600/10 transition-all duration-200"
-                >
-                  <Icon size={17} />
-                </a>
-              ))}
-            </div>
+            {/* Social - links configurable from admin dashboard */}
+            <SocialLinks />
           </div>
 
           {/* Quick Links */}
@@ -103,9 +121,9 @@ export default function Footer() {
             © 2025 نشمي سوق — جميع الحقوق محفوظة
           </p>
           <div className="flex items-center gap-4 text-white/30 text-xs">
-            <a href="#" className="hover:text-white/60 transition-colors">سياسة الخصوصية</a>
+            <Link href="/privacy" className="hover:text-white/60 transition-colors">سياسة الخصوصية</Link>
             <span className="w-px h-3 bg-white/20" />
-            <a href="#" className="hover:text-white/60 transition-colors">الشروط والأحكام</a>
+            <Link href="/terms" className="hover:text-white/60 transition-colors">الشروط والأحكام</Link>
           </div>
         </div>
       </div>

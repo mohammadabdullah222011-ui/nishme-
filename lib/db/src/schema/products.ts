@@ -1,9 +1,9 @@
-import { pgTable, serial, text, integer, real, timestamp } from "drizzle-orm/pg-core";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
-export const productsTable = pgTable("products", {
-  id: serial("id").primaryKey(),
+export const productsTable = sqliteTable("products", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   description: text("description").notNull().default(""),
   price: integer("price").notNull().default(0),
@@ -13,7 +13,7 @@ export const productsTable = pgTable("products", {
   badge: text("badge"),
   rating: real("rating").notNull().default(5),
   reviews: integer("reviews").notNull().default(0),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 
 export const insertProductSchema = createInsertSchema(productsTable).omit({ id: true, createdAt: true });

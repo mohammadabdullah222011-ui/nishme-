@@ -16,7 +16,7 @@ router.post("/auth/register", async (req, res) => {
     }
 
     // Check if user already exists
-    const existing = db.getUserByEmail(email);
+    const existing = await db.getUserByEmail(email);
     if (existing) {
       res.status(400).json({ error: "البريد الإلكتروني موجود مسبقاً" });
       return;
@@ -27,7 +27,7 @@ router.post("/auth/register", async (req, res) => {
 
     // Hash password and create user in shared DB
     const hashed = await bcrypt.hash(password, 10);
-    const user = db.createUser({ name, email, password: hashed, role });
+    const user = await db.createUser({ name, email, password: hashed, role });
 
     const token = signToken({ userId: user.id, email: user.email, role: user.role });
     res.status(201).json({
@@ -49,7 +49,7 @@ router.post("/auth/login", async (req, res) => {
     }
 
     // Look up user in shared DB
-    const user = db.getUserByEmail(email);
+    const user = await db.getUserByEmail(email);
     if (!user || !user.password) {
       res.status(401).json({ error: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
       return;
@@ -74,7 +74,7 @@ router.post("/auth/login", async (req, res) => {
 // GET /api/auth/me
 router.get("/auth/me", requireAuth, async (req, res) => {
   try {
-    const user = db.getUserByEmail(req.user!.email);
+    const user = await db.getUserByEmail(req.user!.email);
     if (!user) {
       res.status(404).json({ error: "المستخدم غير موجود" });
       return;

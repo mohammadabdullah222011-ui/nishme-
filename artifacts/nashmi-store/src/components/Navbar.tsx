@@ -8,6 +8,20 @@ import EditProfileModal from "@/components/EditProfileModal";
 
 const logoImg = `${import.meta.env.BASE_URL}logo-nashmi.png`;
 
+function getAdminUrl() {
+  const envUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_ADMIN_URL : undefined;
+  if (envUrl) return envUrl;
+  const apiUrl = typeof import.meta !== 'undefined' ? import.meta.env?.VITE_API_URL : undefined;
+  if (apiUrl) {
+    const parts = apiUrl.replace(/\/api\/?$/, '').split(':');
+    if (parts.length >= 2) {
+      const port = parseInt(parts[parts.length - 1]);
+      return `http://localhost:${port + 1}`;
+    }
+  }
+  return 'https://nashmi-market-nashmi-admin.vercel.app';
+}
+
 const navLinks = [
   { href: "/", label: "الرئيسية" },
   { href: "/products", label: "المنتجات" },
@@ -147,7 +161,7 @@ export default function Navbar() {
                         {/* Admin Panel link — admins only */}
                         {isAdmin && (
                           <a
-                            href="/admin/"
+                            href={getAdminUrl()}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors border-t border-white/5 mt-1"
@@ -236,7 +250,7 @@ export default function Navbar() {
                   </button>
                   {isAdmin && (
                     <a
-                      href="/admin/"
+                      href={getAdminUrl()}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-4 py-3 rounded-lg border border-red-600/30 text-red-400 text-sm font-semibold flex items-center gap-2 hover:bg-red-600/10 transition-all"

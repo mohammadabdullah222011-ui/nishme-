@@ -7,7 +7,7 @@ const router = Router();
 // GET /api/users (admin only)
 router.get("/users", async (_req, res) => {
   try {
-    const users = db.getUsers();
+    const users = await db.getUsers();
     // Strip passwords from response
     const safe = users.map(({ password, ...u }) => u);
     res.json(safe);
@@ -26,7 +26,7 @@ router.put("/users/:id/role", async (req, res) => {
       return;
     }
     
-    const existing = db.getUserById(Number(req.params.id));
+    const existing = await db.getUserById(Number(req.params.id));
     if (!existing) { res.status(404).json({ error: "المستخدم غير موجود" }); return; }
 
     // When promoting to admin, require a password
@@ -36,10 +36,10 @@ router.put("/users/:id/role", async (req, res) => {
         return;
       }
       const hashed = await bcrypt.hash(password, 10);
-      db.updateUserPassword(existing.id, hashed);
+      await db.updateUserPassword(existing.id, hashed);
     }
 
-    const updated = db.updateUserRole(existing.id, role);
+    const updated = await db.updateUserRole(Number(req.params.id), role);
     if (!updated) { res.status(404).json({ error: "المستخدم غير موجود" }); return; }
     const { password: _, ...safe } = updated;
     res.json(safe);

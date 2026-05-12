@@ -1,9 +1,7 @@
-import { useState } from "react";
-import { ShoppingCart, X, Plus, Minus, Trash2, CheckCircle, LogIn, Loader2, Phone, User, MapPin } from "lucide-react";
+import { ShoppingCart, X, Plus, Minus, Trash2, LogIn } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useCart } from "@/context/CartContext";
 import { useUser } from "@/context/UserContext";
-import { api } from "@/lib/api";
 import { Link } from "wouter";
 
 interface CartDrawerProps {
@@ -12,42 +10,8 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ open, onClose }: CartDrawerProps) {
-  const { items, removeFromCart, updateQuantity, totalPrice, totalItems, clearCart } = useCart();
+  const { items, removeFromCart, updateQuantity, totalPrice, totalItems } = useCart();
   const { user } = useUser();
-  const [checking, setChecking] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [error, setError] = useState("");
-  const [customerName, setCustomerName] = useState(user?.name || "");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-
-  const handleCheckout = async () => {
-    if (!user) return;
-    if (!customerName.trim()) {
-      setError("يرجى إدخال الاسم");
-      return;
-    }
-    if (!phone.trim()) {
-      setError("يرجى إدخال رقم الهاتف");
-      return;
-    }
-    if (!address.trim()) {
-      setError("يرجى إدخال العنوان");
-      return;
-    }
-    setChecking(true);
-    setError("");
-    try {
-      await api.createOrder(items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })), phone.trim(), customerName.trim(), address.trim());
-      setSuccess(true);
-      clearCart();
-      setTimeout(() => { setSuccess(false); onClose(); }, 2500);
-    } catch (e: any) {
-      setError(e.message || "حدث خطأ أثناء الطلب");
-    } finally {
-      setChecking(false);
-    }
-  };
 
   return (
     <Sheet open={open} onOpenChange={onClose}>
@@ -67,17 +31,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto py-4">
-          {/* Success state */}
-          {success ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center"
-                style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)" }}>
-                <CheckCircle size={40} className="text-green-400" />
-              </div>
-              <p className="text-white text-xl font-bold">تم استلام طلبك!</p>
-              <p className="text-white/40 text-sm">سيتم التواصل معك قريباً</p>
-            </div>
-          ) : items.length === 0 ? (
+          {items.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-4 text-center">
               <div className="w-20 h-20 rounded-full flex items-center justify-center"
                 style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.2)" }}>
@@ -122,48 +76,21 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
           )}
         </div>
 
-        {items.length > 0 && !success && (
+        {items.length > 0 && (
           <div className="border-t border-white/10 pt-4 flex flex-col gap-3">
             <div className="flex justify-between items-center">
               <span className="text-white/60">المجموع</span>
               <span className="text-white font-bold text-lg">{totalPrice.toLocaleString("en")} د.أ</span>
             </div>
 
-            {error && (
-              <p className="text-red-400 text-sm text-center py-1">{error}</p>
-            )}
-
-            {user && (
-              <div className="flex flex-col gap-3">
-                <div className="relative">
-                  <User size={15} className="absolute top-1/2 -translate-y-1/2 right-3 text-white/30" />
-                  <input type="text" required value={customerName} onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="الاسم الكامل *"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pr-9 pl-4 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors" />
-                </div>
-                <div className="relative">
-                  <Phone size={15} className="absolute top-1/2 -translate-y-1/2 right-3 text-white/30" />
-                  <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)}
-                    placeholder="رقم الهاتف *"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pr-9 pl-4 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors"
-                    dir="ltr" />
-                </div>
-                <div className="relative">
-                  <MapPin size={15} className="absolute top-1/2 -translate-y-1/2 right-3 text-white/30" />
-                  <input type="text" required value={address} onChange={(e) => setAddress(e.target.value)}
-                    placeholder="العنوان (المدينة، الحي، الشارع) *"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pr-9 pl-4 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors" />
-                </div>
-              </div>
-            )}
-
             {user ? (
-              <button onClick={handleCheckout} disabled={checking}
-                className="w-full py-3.5 rounded-xl font-bold text-white text-base transition-all duration-200 hover:opacity-90 active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
-                style={{ background: "linear-gradient(135deg, #dc2626, #b91c1c)", boxShadow: "0 0 20px rgba(220,38,38,0.4)" }}
-                data-testid="button-checkout">
-                {checking ? <><Loader2 size={18} className="animate-spin" /> جارٍ إرسال الطلب...</> : "إتمام الطلب"}
-              </button>
+              <Link href="/checkout" onClick={onClose}>
+                <button className="w-full py-3.5 rounded-xl font-bold text-white text-base transition-all duration-200 hover:opacity-90 active:scale-95"
+                  style={{ background: "linear-gradient(135deg, #dc2626, #b91c1c)", boxShadow: "0 0 20px rgba(220,38,38,0.4)" }}
+                  data-testid="button-go-checkout">
+                  إتمام الطلب
+                </button>
+              </Link>
             ) : (
               <Link href="/login" onClick={onClose}>
                 <button className="w-full py-3.5 rounded-xl font-bold text-white text-base transition-all duration-200 hover:opacity-90 flex items-center justify-center gap-2"

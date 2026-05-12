@@ -16,15 +16,15 @@ router.post("/orders", async (req, res) => {
     let total = 0;
     const enrichedItems: { product_id: number; quantity: number; price: number }[] = [];
     for (const item of items) {
-      const product = db.getProductById(item.product_id);
+      const product = await db.getProductById(item.product_id);
       if (!product) continue;
       enrichedItems.push({ product_id: item.product_id, quantity: item.quantity, price: product.price });
       total += product.price * item.quantity;
     }
 
     // Create order with items
-    const orderItems = enrichedItems.map(item => {
-      const product = db.getProductById(item.product_id);
+    const orderItems = await Promise.all(enrichedItems.map(async item => {
+      const product = await db.getProductById(item.product_id);
       return {
         productId: item.product_id,
         name: product?.name || `منتج #${item.product_id}`,
@@ -32,9 +32,9 @@ router.post("/orders", async (req, res) => {
         quantity: item.quantity,
         imageUrl: product?.imageUrl || "",
       };
-    });
+    }));
 
-    const order = db.createOrder({
+    const order = await db.createOrder({
       userId: null,
       total,
       customerName: customerName?.trim() || "عميل",
@@ -52,7 +52,7 @@ router.post("/orders", async (req, res) => {
 // GET /api/orders/my (current user's orders)
 router.get("/orders/my", async (_req, res) => {
   try {
-    const orders = db.getOrders();
+    const orders = await db.getOrders();
     res.json(orders);
   } catch {
     res.status(500).json({ error: "خطأ في الخادم" });
@@ -67,7 +67,7 @@ router.post("/orders/manual", async (req, res) => {
       res.status(400).json({ error: "اسم العميل والمبلغ مطلوبان" });
       return;
     }
-    const order = db.createOrder({
+    const order = await db.createOrder({
       userId: null,
       total: Number(total),
       status: status || "pending",
@@ -85,7 +85,7 @@ router.post("/orders/manual", async (req, res) => {
 // GET /api/orders (admin)
 router.get("/orders", async (req, res) => {
   try {
-    const orders = db.getOrders();
+    const orders = await db.getOrders();
     res.json(orders);
   } catch {
     res.status(500).json({ error: "خطأ في الخادم" });
@@ -95,7 +95,7 @@ router.get("/orders", async (req, res) => {
 // GET /api/orders/:id (admin)
 router.get("/orders/:id", async (req, res) => {
   try {
-    const order = db.getOrderById(Number(req.params.id));
+    const order = await db.getOrderById(Number(req.params.id));
     if (!order) { res.status(404).json({ error: "الطلب غير موجود" }); return; }
     res.json(order);
   } catch {
@@ -106,7 +106,7 @@ router.get("/orders/:id", async (req, res) => {
 // PUT /api/orders/:id/status (admin)
 router.put("/orders/:id/status", async (req, res) => {
   try {
-    const updated = db.updateOrderStatus(Number(req.params.id), req.body.status);
+    const updated = await db.updateOrderStatus(Number(req.params.id), req.body.status);
     if (!updated) { res.status(404).json({ error: "الطلب غير موجود" }); return; }
     
     // تسجيل المبيعات تلقائياً عند تغيير الحالة إلى "مكتمل"

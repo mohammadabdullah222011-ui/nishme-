@@ -70,6 +70,10 @@ export const adminApi = {
 
   dashboard: () => req<DashboardData>("GET", "/dashboard"),
 
+  // Settings
+  getSettings: () => req<AdminSettings>("GET", "/settings"),
+  updateSettings: (data: Partial<AdminSettings>) => req<AdminSettings>("PUT", "/settings", data),
+
   // Notifications
   getNotifications: () => req<AdminNotification[]>("GET", "/notifications"),
   getUnreadCount: () => req<{ count: number }>("GET", "/notifications/unread-count"),
@@ -128,6 +132,17 @@ export interface AdminUser {
   createdAt: string;
   orderCount: number;
   totalSpent: number;
+}
+
+export interface AdminSettings {
+  id: number;
+  instagram: string;
+  facebook: string;
+  storeName: string;
+  storePhone: string;
+  storeEmail: string;
+  storeAddress: string;
+  updatedAt: string;
 }
 
 export interface DashboardData {

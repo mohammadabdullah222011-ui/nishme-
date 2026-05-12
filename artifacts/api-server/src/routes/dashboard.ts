@@ -6,7 +6,7 @@ const router = Router();
 // GET /api/dashboard
 router.get("/dashboard", async (_req, res) => {
   try {
-    const stats = db.getUserStats();
+    const stats = await db.getUserStats();
 
     res.json(stats);
   } catch {
