@@ -3,10 +3,8 @@ import { ShoppingCart, Users, DollarSign, Package, TrendingUp, Star, Plus } from
 import StatCard from "@/components/StatCard";
 import RevenueChart from "@/components/RevenueChart";
 import TrafficChart from "@/components/TrafficChart";
-import SystemMonitor from "@/components/SystemMonitor";
 import RecentOrders from "@/components/RecentOrders";
 import AlertsPanel from "@/components/AlertsPanel";
-import CategoryChart from "@/components/CategoryChart";
 import DevicesPanel from "@/components/DevicesPanel";
 import QuickActions from "@/components/QuickActions";
 import AddOrderModal from "@/components/AddOrderModal";
@@ -49,7 +47,7 @@ export default function Dashboard() {
   const stats = [
     {
       title: t("إجمالي الإيرادات"),
-      value: liveStats?.totalRevenue ?? 469000,
+      value: liveStats?.totalRevenue ?? 0,
       unit: "JOD",
       change: 18.5,
       icon: <DollarSign size={18} className="text-red-400" />,
@@ -58,7 +56,7 @@ export default function Dashboard() {
     },
     {
       title: t("إجمالي الطلبات"),
-      value: liveStats?.totalOrders ?? 3155,
+      value: liveStats?.totalOrders ?? 0,
       change: 12.3,
       icon: <ShoppingCart size={18} className="text-blue-400" />,
       iconBg: "rgba(59,130,246,0.12)",
@@ -153,16 +151,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Row 3: Alerts + Orders + System */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Row 3: Alerts + Orders */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <AlertsPanel />
         <RecentOrders />
-        <SystemMonitor />
       </div>
 
-      {/* Row 4: Category + Devices + Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <CategoryChart />
+      {/* Row 4: Devices + Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <DevicesPanel />
         <QuickActions />
       </div>
