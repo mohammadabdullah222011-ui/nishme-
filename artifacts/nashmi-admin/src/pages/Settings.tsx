@@ -2,11 +2,35 @@ import { useState } from "react";
 import { Settings as SettingsIcon, Save, Globe, Bell, Shield, Palette, RefreshCw } from "lucide-react";
 import { useLang } from "@/i18n/context";
 
+const SETTINGS_KEY = "nashmi_admin_settings";
+
+interface AdminSettings {
+  notifications: boolean;
+  twoFactor: boolean;
+  darkMode: boolean;
+}
+
+function loadSettings(): AdminSettings {
+  try {
+    return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "null") || { notifications: true, twoFactor: false, darkMode: true };
+  } catch {
+    return { notifications: true, twoFactor: false, darkMode: true };
+  }
+}
+
 export default function SettingsPage() {
   const { t, lang, setLang } = useLang();
+  const [settings, setSettings] = useState<AdminSettings>(loadSettings);
   const [saved, setSaved] = useState(false);
 
+  const toggle = (key: keyof AdminSettings) => {
+    const next = { ...settings, [key]: !settings[key] };
+    setSettings(next);
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+  };
+
   const handleSave = () => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -30,11 +54,11 @@ export default function SettingsPage() {
 
       <div className="space-y-4">
         {[
-          { icon: Globe, label: t("اللغة"), desc: t("Arabic (الأردن)"), type: "select", options: [{ label: t("العربية"), value: "ar" }, { label: t("English"), value: "en" }] },
-          { icon: Bell, label: t("الإشعارات"), desc: t("إشعارات الطلبات الجديدة"), type: "toggle" },
-          { icon: Shield, label: t("المصادقة"), desc: t("مصادقة ثنائية (2FA)"), type: "toggle" },
-          { icon: Palette, label: t("المظهر"), desc: t("داكن - الوضع الليلي"), type: "toggle" },
-        ].map((s) => (
+          { icon: Globe, label: t("اللغة"), desc: t("Arabic (الأردن)"), type: "select", value: lang, onChange: (v: string) => setLang(v as "ar" | "en"), options: [{ label: t("العربية"), value: "ar" }, { label: t("English"), value: "en" }] },
+          { icon: Bell, label: t("الإشعارات"), desc: t("إشعارات الطلبات الجديدة"), type: "toggle", value: settings.notifications, onChange: () => toggle("notifications") },
+          { icon: Shield, label: t("المصادقة"), desc: t("مصادقة ثنائية (2FA)"), type: "toggle", value: settings.twoFactor, onChange: () => toggle("twoFactor") },
+          { icon: Palette, label: t("المظهر"), desc: t("داكن - الوضع الليلي"), type: "toggle", value: settings.darkMode, onChange: () => toggle("darkMode") },
+        ].map((s: any) => (
           <div key={s.label} className="stat-card p-5 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: "rgba(220,38,38,0.15)" }}>
@@ -46,16 +70,16 @@ export default function SettingsPage() {
               </div>
             </div>
             {s.type === "select" ? (
-              <select value={lang} onChange={(e) => setLang(e.target.value as "ar" | "en")}
+              <select value={s.value} onChange={(e) => s.onChange(e.target.value)}
                 className="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-white text-sm focus:outline-none focus:border-red-500/50"
                 style={{ background: "rgba(255,255,255,0.05)" }}>
-                {s.options?.map((o) => <option key={o.value} value={o.value} style={{ background: "#111" }}>{o.label}</option>)}
+                {s.options?.map((o: any) => <option key={o.value} value={o.value} style={{ background: "#111" }}>{o.label}</option>)}
               </select>
             ) : (
-              <div className="w-10 h-5 rounded-full cursor-pointer relative transition-colors bg-red-500/30"
-                style={{ background: "rgba(220,38,38,0.3)" }}>
-                <div className="w-4 h-4 rounded-full bg-red-400 absolute top-0.5 right-0.5 transition-all shadow-md" />
-              </div>
+              <button type="button" onClick={s.onChange}
+                className={`w-10 h-5 rounded-full relative transition-colors ${s.value ? "bg-red-500/60" : "bg-white/10"}`}>
+                <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-all shadow-md ${s.value ? "right-5" : "right-0.5"}`} />
+              </button>
             )}
           </div>
         ))}

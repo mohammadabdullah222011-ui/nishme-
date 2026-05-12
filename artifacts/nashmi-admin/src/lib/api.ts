@@ -65,8 +65,8 @@ export const adminApi = {
 
   getUsers: () => req<AdminUser[]>("GET", "/users"),
 
-  updateUserRole: (id: number, role: string) =>
-    req<{ id: number; name: string; email: string; role: string }>("PUT", `/users/${id}/role`, { role }),
+  updateUserRole: (id: number, role: string, password?: string) =>
+    req<{ id: number; name: string; email: string; role: string }>("PUT", `/users/${id}/role`, { role, password }),
 
   dashboard: () => req<DashboardData>("GET", "/dashboard"),
 

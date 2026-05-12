@@ -47,6 +47,7 @@ interface AdminUser {
   id: number;
   name: string;
   email: string;
+  password?: string;
   role: string;
   createdAt: string;
   orderCount: number;
@@ -59,6 +60,7 @@ let users: AdminUser[] = [
     id: 1,
     name: "Admin",
     email: "admin@nashmi.com",
+    password: "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
     role: "admin",
     createdAt: new Date().toISOString(),
     orderCount: 0,
@@ -152,13 +154,14 @@ export const db = {
   getUsers: () => users,
   getUserById: (id: number) => users.find(u => u.id === id),
   getUserByEmail: (email: string) => users.find(u => u.email === email),
-  createUser: (user: Omit<AdminUser, 'id' | 'createdAt' | 'orderCount' | 'totalSpent'>) => {
+  createUser: (user: Omit<AdminUser, 'id' | 'createdAt' | 'orderCount' | 'totalSpent'> & { password?: string }) => {
     const newUser = {
       ...user,
       id: nextId.users++,
       createdAt: new Date().toISOString(),
       orderCount: 0,
-      totalSpent: 0
+      totalSpent: 0,
+      password: user.password || undefined
     };
     users.push(newUser);
     return newUser;
@@ -167,6 +170,13 @@ export const db = {
     const user = users.find(u => u.id === id);
     if (user) {
       user.role = role;
+    }
+    return user;
+  },
+  updateUserPassword: (id: number, password: string) => {
+    const user = users.find(u => u.id === id);
+    if (user) {
+      user.password = password;
     }
     return user;
   },

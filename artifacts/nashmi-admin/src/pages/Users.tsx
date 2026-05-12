@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Search, Shield, ShieldOff, UserCheck, Loader2, RefreshCw, Users as UsersIcon } from "lucide-react";
+import { Search, Shield, ShieldOff, UserCheck, Loader2, RefreshCw, Users as UsersIcon, X } from "lucide-react";
 import { adminApi, type AdminUser } from "@/lib/api";
 import { useLang } from "@/i18n/context";
 
@@ -18,6 +18,7 @@ export default function Users() {
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
   const [confirmId, setConfirmId] = useState<number | null>(null);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [passwordModal, setPasswordModal] = useState<{ user: AdminUser; password: string; error: string } | null>(null);
 
   const fetchUsers = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
@@ -38,17 +39,27 @@ export default function Users() {
     return () => clearInterval(interval);
   }, [fetchUsers]);
 
-  const toggleRole = async (user: AdminUser) => {
+  const toggleRole = async (user: AdminUser, password?: string) => {
     const newRole = user.role === "admin" ? "user" : "admin";
     setUpdatingId(user.id);
     setConfirmId(null);
     try {
-      const updated = await adminApi.updateUserRole(user.id, newRole);
+      const updated = await adminApi.updateUserRole(user.id, newRole, password);
       setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, role: updated.role } : u));
     } catch (e: any) {
       setError(e.message);
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handlePromoteClick = (user: AdminUser) => {
+    if (user.role === "admin") {
+      // Demoting — no password needed
+      toggleRole(user);
+    } else {
+      // Promoting — show password dialog
+      setPasswordModal({ user, password: "", error: "" });
     }
   };
 
@@ -174,7 +185,7 @@ export default function Users() {
                         <Loader2 size={14} className="animate-spin text-red-400" />
                       ) : confirmId === user.id ? (
                         <div className="flex items-center gap-1.5">
-                          <button onClick={() => toggleRole(user)}
+                          <button onClick={() => handlePromoteClick(user)}
                             className="text-[10px] px-2 py-0.5 rounded-lg font-bold text-white transition-all"
                             style={{ background: user.role === "admin" ? "rgba(59,130,246,0.3)" : "rgba(220,38,38,0.3)" }}>
                             {t("تأكيد")}
@@ -185,7 +196,10 @@ export default function Users() {
                           </button>
                         </div>
                       ) : (
-                        <button onClick={() => setConfirmId(user.id)}
+                        <button onClick={() => {
+                          if (user.role === "admin") setConfirmId(user.id);
+                          else handlePromoteClick(user);
+                        }}
                           className={`flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg font-semibold border transition-all duration-200 ${user.role === "admin" ? "text-blue-400 border-blue-400/20 hover:bg-blue-400/10" : "text-red-400 border-red-400/20 hover:bg-red-400/10"}`}>
                           {user.role === "admin" ? <><ShieldOff size={12} />{t("إزالة المدير")}</> : <><Shield size={12} />{t("ترقية لمدير")}</>}
                         </button>
@@ -213,6 +227,67 @@ export default function Users() {
           <span className="flex items-center gap-1.5 text-xs text-blue-300"><UserCheck size={11} />{t("عميل — صلاحيات محدودة")}</span>
         </div>
       </div>
+
+      {/* Password modal for promoting to admin */}
+      {passwordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(6px)" }}>
+          <div className="w-full max-w-sm mx-4 rounded-2xl p-6 border border-white/10" style={{ background: "linear-gradient(135deg, rgba(20,20,20,0.98), rgba(10,10,10,0.98))" }}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-white font-bold text-base">تعيين كلمة مرور للمدير</h2>
+              <button onClick={() => setPasswordModal(null)} className="text-white/30 hover:text-white transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <p className="text-white/50 text-xs mb-4">
+              أنت على وشك ترقية <strong className="text-white">{passwordModal.user.name}</strong> إلى مدير. يرجى تعيين كلمة مرور للمستخدم.
+            </p>
+            {passwordModal.error && (
+              <div className="mb-3 p-2 rounded-xl border border-red-500/30 text-red-400 text-xs" style={{ background: "rgba(220,38,38,0.08)" }}>
+                {passwordModal.error}
+              </div>
+            )}
+            <input
+              type="password"
+              value={passwordModal.password}
+              onChange={(e) => setPasswordModal({ ...passwordModal, password: e.target.value, error: "" })}
+              placeholder="كلمة المرور الجديدة"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-red-500/50 transition-colors mb-4"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && passwordModal.password.length >= 4) {
+                  const user = passwordModal.user;
+                  const pw = passwordModal.password;
+                  setPasswordModal(null);
+                  toggleRole(user, pw);
+                }
+              }}
+            />
+            <div className="flex gap-3">
+              <button onClick={() => setPasswordModal(null)}
+                className="flex-1 py-2.5 rounded-xl border border-white/10 text-white/50 hover:text-white text-sm font-semibold transition-all">
+                {t("إلغاء")}
+              </button>
+              <button
+                disabled={passwordModal.password.length < 4}
+                onClick={() => {
+                  const user = passwordModal.user;
+                  const pw = passwordModal.password;
+                  if (pw.length < 4) {
+                    setPasswordModal({ ...passwordModal, error: "كلمة المرور يجب أن تكون 4 أحرف على الأقل" });
+                    return;
+                  }
+                  setPasswordModal(null);
+                  toggleRole(user, pw);
+                }}
+                className="flex-1 py-2.5 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                style={{ background: "rgba(220,38,38,0.85)", boxShadow: "0 0 15px rgba(220,38,38,0.3)" }}>
+                <Shield size={14} />
+                ترقية لمدير
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
