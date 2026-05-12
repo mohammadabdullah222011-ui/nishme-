@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { pushSchema } from "@workspace/db";
 import { autoSeed } from "./lib/productSeeder.js";
 
 const rawPort = process.env.PORT || "5001";
@@ -18,6 +19,7 @@ app.listen(port, async (err) => {
 
   logger.info({ port }, "Server listening");
 
-  // Auto-seed admin user + products on every startup
+  // Ensure all tables exist, then seed
+  pushSchema();
   await autoSeed();
 });

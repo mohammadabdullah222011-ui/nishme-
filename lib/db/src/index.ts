@@ -23,4 +23,5 @@ sqlite.pragma("foreign_keys = ON");
 const db = drizzle(sqlite, { schema });
 
 export { db };
+export { pushSchema } from "./pushSchema";
 export * from "./schema";
