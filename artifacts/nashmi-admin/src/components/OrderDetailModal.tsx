@@ -1,4 +1,4 @@
-import { X, Package, ShoppingCart, CreditCard, User, Calendar, Phone, MapPin } from "lucide-react";
+import { X, Package, ShoppingCart, CreditCard, User, Calendar, Phone, MapPin, DollarSign } from "lucide-react";
 import type { AdminOrder } from "@/lib/api";
 
 interface Props {
@@ -101,6 +101,13 @@ export default function OrderDetailModal({ order, onClose }: Props) {
               <span className={`inline-block text-xs font-semibold px-3 py-1 rounded-full border ${statusStyles[order.status] || "text-white/50"}`}>
                 {arStatus}
               </span>
+            </div>
+            <div className="p-4 rounded-xl border border-white/[0.06]" style={{ background: "rgba(255,255,255,0.02)" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign size={14} className="text-white/30" />
+                <span className="text-white/40 text-xs">طريقة الدفع</span>
+              </div>
+              <p className="text-white/80 text-sm">{order.paymentMethod === "click" ? "تحويل بنكي / كليك" : "الدفع عند الاستلام"}</p>
             </div>
           </div>
 

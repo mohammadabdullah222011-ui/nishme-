@@ -25,7 +25,7 @@ export default function CheckoutPage() {
     setChecking(true);
     setError("");
     try {
-      await api.createOrder(items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })), phone.trim(), customerName.trim(), address.trim());
+      await api.createOrder(items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })), phone.trim(), customerName.trim(), address.trim(), paymentMethod);
       setSuccess(true);
       clearCart();
       setTimeout(() => navigate("/"), 2500);

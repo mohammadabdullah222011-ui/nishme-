@@ -6,7 +6,7 @@ const router = Router();
 // POST /api/orders (authenticated users)
 router.post("/orders", async (req, res) => {
   try {
-    const { items, phone, customerName, address } = req.body as { items: { product_id: number; quantity: number }[]; phone?: string; customerName?: string; address?: string };
+    const { items, phone, customerName, address, paymentMethod } = req.body as { items: { product_id: number; quantity: number }[]; phone?: string; customerName?: string; address?: string; paymentMethod?: string };
     if (!items?.length) {
       res.status(400).json({ error: "الطلب فارغ" });
       return;
@@ -40,6 +40,7 @@ router.post("/orders", async (req, res) => {
       customerName: customerName?.trim() || "عميل",
       phone: phone?.trim() || "",
       address: address?.trim() || "",
+      paymentMethod: paymentMethod || "cash",
       items: orderItems,
     });
 

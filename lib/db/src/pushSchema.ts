@@ -62,11 +62,20 @@ const SCRIPTS = [
   )`,
 ];
 
+const MIGRATIONS = [
+  `ALTER TABLE orders ADD COLUMN phone TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE orders ADD COLUMN address TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE orders ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'cash'`,
+];
+
 export function pushSchema() {
   const dbPath = getDbPath();
   const sqlite = new Database(dbPath);
   for (const sql of SCRIPTS) {
     sqlite.exec(sql);
+  }
+  for (const sql of MIGRATIONS) {
+    try { sqlite.exec(sql); } catch { /* column may already exist */ }
   }
   sqlite.close();
   console.log("[pushSchema] ✅ All tables created/verified");

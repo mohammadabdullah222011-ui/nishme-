@@ -110,6 +110,7 @@ export interface AdminOrder {
   customerName: string;
   phone: string;
   address: string;
+  paymentMethod: string;
   items: OrderItem[];
   createdAt: string;
 }

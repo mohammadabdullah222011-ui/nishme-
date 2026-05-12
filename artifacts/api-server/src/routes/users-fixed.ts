@@ -1,5 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import { db as drizzleDb, ordersTable } from "@workspace/db";
+import { eq, count, sum } from "drizzle-orm";
 import { db } from "../lib/database.js";
 
 const router = Router();
@@ -8,9 +10,16 @@ const router = Router();
 router.get("/users", async (_req, res) => {
   try {
     const users = await db.getUsers();
-    // Strip passwords from response
-    const safe = users.map(({ password, ...u }) => u);
-    res.json(safe);
+    // Enrich with order stats
+    const enriched = await Promise.all(users.map(async (u) => {
+      const [stats] = await drizzleDb.select({
+        orderCount: count(ordersTable.id),
+        totalSpent: sum(ordersTable.total),
+      }).from(ordersTable).where(eq(ordersTable.userId, u.id));
+      const { password, ...safe } = u;
+      return { ...safe, orderCount: Number(stats?.orderCount ?? 0), totalSpent: Number(stats?.totalSpent ?? 0) };
+    }));
+    res.json(enriched);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "خطأ في الخادم" });

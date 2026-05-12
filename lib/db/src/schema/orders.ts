@@ -8,6 +8,9 @@ export const ordersTable = sqliteTable("orders", {
   total: integer("total").notNull().default(0),
   status: text("status").notNull().default("pending"),
   customerName: text("customer_name").notNull().default(""),
+  phone: text("phone").notNull().default(""),
+  address: text("address").notNull().default(""),
+  paymentMethod: text("payment_method").notNull().default("cash"),
   createdAt: text("created_at").notNull().default("CURRENT_TIMESTAMP"),
 });
 

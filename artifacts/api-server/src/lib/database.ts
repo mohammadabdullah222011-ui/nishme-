@@ -85,7 +85,7 @@ export const db = {
 
   createOrder: async (order: {
     userId: number | null; total: number; status?: string;
-    customerName: string; phone?: string; address?: string;
+    customerName: string; phone?: string; address?: string; paymentMethod?: string;
     items: { productId: number; name: string; price: number; quantity: number; imageUrl: string }[];
   }) => {
     const rows = await drizzleDb.insert(ordersTable).values({
@@ -93,6 +93,9 @@ export const db = {
       total: order.total,
       status: order.status || "pending",
       customerName: order.customerName,
+      phone: order.phone || "",
+      address: order.address || "",
+      paymentMethod: order.paymentMethod || "cash",
     }).returning();
     const newOrder = rows[0];
 
@@ -117,7 +120,7 @@ export const db = {
       createdAt: new Date().toISOString(),
     });
 
-    return { ...newOrder, phone: order.phone || "", address: order.address || "", items: order.items };
+    return { ...newOrder, phone: order.phone || "", address: order.address || "", paymentMethod: order.paymentMethod || "cash", items: order.items };
   },
 
   updateOrderStatus: async (id: number, status: string) => {

@@ -56,7 +56,8 @@ export const api = {
     phone?: string,
     customerName?: string,
     address?: string,
-  ) => req<{ id: number }>("POST", "/orders", { items, phone, customerName, address }),
+    paymentMethod?: string,
+  ) => req<{ id: number }>("POST", "/orders", { items, phone, customerName, address, paymentMethod }),
 
   myOrders: () => req<ApiOrder[]>("GET", "/orders/my"),
 
@@ -97,6 +98,7 @@ export interface ApiOrder {
   customerName: string;
   phone: string;
   address: string;
+  paymentMethod: string;
   createdAt: string;
 }
 
