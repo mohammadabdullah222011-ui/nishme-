@@ -5,7 +5,7 @@ services:
     repo: https://github.com/mohammadabdullah222011-ui/nashmi-market
     branch: main
     rootDir: artifacts/api-server
-    buildCommand: pnpm install && node build.mjs
+    buildCommand: cd ../.. && pnpm install && cd artifacts/api-server && node build.mjs
     startCommand: node --enable-source-maps dist/index.mjs
     healthCheckPath: /api/healthz
     envVars:
